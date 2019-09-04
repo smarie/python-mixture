@@ -252,6 +252,19 @@
     Usage
   </a>
   
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-mix-in-mechanisms" class="md-nav__link">
+    Basic mix-in mechanisms
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -343,6 +356,19 @@
     Usage
   </a>
   
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-mix-in-mechanisms" class="md-nav__link">
+    Basic mix-in mechanisms
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -409,11 +435,64 @@
 
 
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
-<p><strong>TODO</strong></p>
+<h3 id="basic-mix-in-mechanisms">Basic mix-in mechanisms<a class="headerlink" href="#basic-mix-in-mechanisms" title="Permanent link">&para;</a></h3>
+<p>A mix-in class is typically </p>
+<ul>
+<li>a class without constructor, </li>
+<li>that implements some functionality as a set of functions, based on the existence of certain fields.</li>
+<li>that may include include class attributes (for example to add fields using the "descriptor protocol")</li>
+</ul>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span>
+
+<span class="k">class</span> <span class="nc">BarkerMixin</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">bark</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;barking loudly&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>In native python you can already use mixin classes by inheriting from them:</p>
+<div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">Duck</span><span class="p">(</span><span class="n">BarkerMixin</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+
+
+<p>In addition, this library provides a way to apply mixin classes <em>without inheritance</em>:</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">mixture</span> <span class="kn">import</span> <span class="n">apply_mixins</span>
+
+<span class="nd">@apply_mixins</span><span class="p">(</span><span class="n">BarkerMixin</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Duck</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+
+<p>in that case a special field is set on the class, containing the list of all members that were created as the result of copying from mixins:</p>
+<div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">Duck</span><span class="o">.</span><span class="n">__from_mixins__</span>
+<span class="p">(</span><span class="s1">&#39;bark&#39;</span><span class="p">,)</span>
+</pre></div>
+
+
+<p>and if the mixin is an <a href="https://docs.python.org/3/library/abc.html">Abstract Base Class</a>, the decorated class is registered as a virtual subclass:</p>
+<div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">Duck</span><span class="p">,</span> <span class="n">BarkerMixin</span><span class="p">)</span>
+<span class="bp">True</span>
+ <span class="sb">``</span><span class="err">`</span>
+
+<span class="n">Lets</span> <span class="n">create</span> <span class="n">a</span> <span class="n">barking</span> <span class="n">duck</span><span class="p">:</span>
+
+<span class="sb">``</span><span class="err">`</span><span class="n">python</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">d</span> <span class="o">=</span> <span class="n">Duck</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">d</span><span class="o">.</span><span class="n">bark</span><span class="p">()</span>
+<span class="n">barking</span> <span class="n">loudly</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">BarkerMixin</span><span class="p">)</span>
+<span class="bp">True</span>
+</pre></div>
+
+
 <h2 id="main-features-benefits">Main features / benefits<a class="headerlink" href="#main-features-benefits" title="Permanent link">&para;</a></h2>
 <p><strong>TODO</strong></p>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
-<p><strong>TODO</strong></p>
+<ul>
+<li><a href="https://github.com/yupeng0921/pymixin"><code>pymixin</code></a></li>
+</ul>
 <h3 id="others">Others<a class="headerlink" href="#others" title="Permanent link">&para;</a></h3>
 <p><em>Do you like this library ? You might also like <a href="https://github.com/smarie/OVERVIEW#python">my other python libraries</a></em> </p>
 <h2 id="want-to-contribute">Want to contribute ?<a class="headerlink" href="#want-to-contribute" title="Permanent link">&para;</a></h2>
