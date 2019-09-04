@@ -54,8 +54,6 @@ def test_apply_mixins_warning_none():
     """Checks that no warning is issued if the mixin class is correct"""
 
     if sys.version_info >= (3, 0):
-        from abc import ABC
-
         class DummyMixinAbcWithoutInit(ABC):
             pass
 
