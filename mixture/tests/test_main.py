@@ -1,22 +1,22 @@
 import sys
-from abc import ABCMeta
 
 import pytest
-from six import with_metaclass
 
 from mixture import apply_mixins
 from mixture.core import MixinNotRegisterableWarning, MixinContainsInitWarning
+
+from .utils import ABC
 
 
 @pytest.mark.parametrize("old_style_class", [False, True], ids="oldstyle={}".format)
 def test_apply_mixins(old_style_class):
     """ nominal test with two mixin classes, checks that the overriding order is correct"""
 
-    class DummyMixinA(type):
+    class DummyMixinA:
         def foo(self, a):
             return a + 1
 
-    class DummyMixinB(object):
+    class DummyMixinB(ABC):
         def foo(self, a):
             return a + 2
 
@@ -45,6 +45,10 @@ def test_apply_mixins(old_style_class):
     o = MyClass()
     assert o.foo(1) == 2  # and not 3
 
+    # check that DummyMixinB has been registered as a virtual parent class
+    assert issubclass(MyClass, DummyMixinB)
+    assert not issubclass(MyClass, DummyMixinA)
+
 
 def test_apply_mixins_warning_none():
     """Checks that no warning is issued if the mixin class is correct"""
@@ -61,7 +65,7 @@ def test_apply_mixins_warning_none():
                 pass
         assert len(record) == 0
 
-    class DummyMixinAbcWithoutInit(with_metaclass(ABCMeta, object)):
+    class DummyMixinAbcWithoutInit(ABC):
         pass
 
     with pytest.warns(None) as record:

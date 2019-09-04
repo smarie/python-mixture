@@ -1,23 +1,32 @@
 #  Authors: Sylvain Marie <sylvain.marie@se.com>
 #
 #  Copyright (c) Schneider Electric Industries, 2019. All right reserved.
+import pytest
+
 from mixture import apply_mixins
 
 from .utils import ABC
 
 
-def test_doc_basic(capsys):
+@pytest.mark.parametrize('use_inheritance', [False, True], ids="use_inheritance={}".format)
+def test_doc_basic(capsys, use_inheritance):
 
     class BarkerMixin(ABC):
         def bark(self):
             print("barking loudly")
 
-    @apply_mixins(BarkerMixin)
-    class Duck:
-        pass
+    if use_inheritance:
+        class Duck(BarkerMixin):
+            pass
+    else:
+        @apply_mixins(BarkerMixin)
+        class Duck:
+            pass
+
+        # in that case a special field is set
+        assert Duck.__from_mixins__ == ('bark',)
 
     # check the class
-    assert Duck.__from_mixins__ == ('bark', )
     assert issubclass(Duck, BarkerMixin)
 
     # lets create a barking duck
