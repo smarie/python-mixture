@@ -21,6 +21,7 @@ def test_doc_basic(capsys, do_apply):
     if not do_apply:
         class TweeterMixin:
             afraid = field(default=False,
+                           name='afraid',
                            doc="""Status of the tweeter. When this is `True`, 
                            tweets will be lighter""")
 
@@ -33,7 +34,7 @@ def test_doc_basic(capsys, do_apply):
 
     else:
         class TweeterMixin(ABC):
-            afraid = field(default=False)
+            afraid = field(default=False, name='afraid')
 
             def tweet(self):
                 how = "lightly" if self.afraid else "loudly"
@@ -44,7 +45,8 @@ def test_doc_basic(capsys, do_apply):
             pass
 
         # a special field is set for monkeypatched members
-        assert MagicDuck.__from_mixins__ == ('afraid', 'tweet', 'bark')
+        assert set(MagicDuck.__from_mixins__[0:2]) == set(('afraid', 'tweet'))
+        assert MagicDuck.__from_mixins__[2] == 'bark'
 
     # check the class
     assert issubclass(MagicDuck, BarkerMixin) is not do_apply

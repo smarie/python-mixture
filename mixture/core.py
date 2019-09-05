@@ -228,6 +228,10 @@ def field(default=MISSING, default_factory=MISSING, doc=None, name=None):
     Example
     -------
 
+    >>> import sys, pytest
+    >>> if sys.version_info < (3, 6):
+    ...     pytest.skip('this doctest does not work on python <3.6 beacause `name` is mandatory')
+    ...
     >>> class Foo:
     ...     foo = field(default='bar', doc="This is an optional field with a default value")
     ...     foo2 = field(default_factory=list, doc="This is an optional with a default value factory")

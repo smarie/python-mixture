@@ -106,13 +106,13 @@ def test_field(read_first, type_):
 
     if type_ == 'default_factory':
         class Tweety:
-            afraid = field(default_factory=lambda: False)
+            afraid = field(default_factory=lambda: False, name='afraid')
     elif type_ == 'default':
         class Tweety:
-            afraid = field(default=False)
+            afraid = field(default=False, name='afraid')
     elif type_ == 'mandatory':
         class Tweety:
-            afraid = field()
+            afraid = field(name='afraid')
     else:
         raise ValueError()
 
