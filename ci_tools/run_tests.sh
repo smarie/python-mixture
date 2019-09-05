@@ -16,11 +16,11 @@ if [ "${TRAVIS_PYTHON_VERSION}" = "3.5" ]; then
    # full
    # Run tests with "python -m pytest" to use the correct version of pytest
    echo -e "\n\n****** Running tests ******\n\n"
-   coverage run --source mixture -m pytest --junitxml=reports/junit/junit.xml --html=reports/junit/report.html -v mixture/tests/
+   coverage run --source mixture -m pytest --junitxml=reports/junit/junit.xml --html=reports/junit/report.html -v mixture/  # and not mixture/tests/: we want DocTest too
    # buggy
    # python -m pytest --junitxml=reports/junit/junit.xml --html=reports/junit/report.html --cov-report term-missing --cov=./mixture -v mixture/tests/
 else
    # faster - skip coverage and html report but keep junit (because used in validity threshold)
     echo -e "\n\n****** Running tests******\n\n"
-    python -m pytest --junitxml=reports/junit/junit.xml -v mixture/tests/
+    python -m pytest --junitxml=reports/junit/junit.xml -v mixture/  # and not mixture/tests/: we want DocTest too
 fi

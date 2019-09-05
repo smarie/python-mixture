@@ -1,11 +1,15 @@
+#  Authors: Sylvain Marie <sylvain.marie@se.com>
+#
+#  Copyright (c) Schneider Electric Industries, 2019. All right reserved.
+
 import sys
 
 import pytest
 
-from mixture import apply_mixins
 from mixture.core import MixinNotRegisterableWarning, MixinContainsInitWarning
+from mixture import apply_mixins, Field, Factory, factory
 
-from .utils import ABC
+from ..utils import ABC
 
 
 @pytest.mark.parametrize("old_style_class", [False, True], ids="oldstyle={}".format)
@@ -94,3 +98,30 @@ def test_apply_mixins_warning_abc():
         @apply_mixins(DummyMixinNotAbc)
         class MyClass(object):
             pass
+
+
+@pytest.mark.parametrize('read_first', [False, True], ids="read_first={}".format)
+@pytest.mark.parametrize('with_factory', [None, 'class', 'decorator'], ids="with_factory={}".format)
+def test_field(read_first, with_factory):
+    """Checks that Field works as expected"""
+
+    if with_factory == 'decorator':
+        @factory
+        def d():
+            return False
+    elif with_factory == 'class':
+        d = Factory(lambda: False)
+    elif with_factory is None:
+        d= False
+    else:
+        raise ValueError()
+
+    class Tweety:
+        afraid = Field(default=d)
+
+    t = Tweety()
+    if read_first:
+        t.afraid = False
+    assert not t.afraid
+    t.afraid = True
+    assert t.afraid
