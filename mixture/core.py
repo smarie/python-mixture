@@ -232,7 +232,7 @@ class field(object):
     >>> o.foo3
     Traceback (most recent call last):
         ...
-    MandatoryFieldInitError
+    mixture.core.MandatoryFieldInitError: Mandatory field 'foo3' was not set before first access on object...
 
     You can define custom factory functions for the default
 
