@@ -1,8 +1,8 @@
 #  Authors: Sylvain Marie <sylvain.marie@se.com>
 #
 #  Copyright (c) Schneider Electric Industries, 2019. All right reserved.
+import sys
 from warnings import warn
-
 
 try:  # python 3.5+
     from typing import Optional, Set, List, Callable, Dict
@@ -176,3 +176,165 @@ def copy_cls_vars(cls):
     cls_vars.pop('__dict__', None)
     cls_vars.pop('__weakref__', None)
     return cls_vars
+
+
+NA = object()
+_unset = object()
+
+
+class MandatoryFieldInitError(Exception):
+    """
+    Raised by Field when a mandatory field is read without being set first.
+    """
+    __slots__ = 'field_name', 'obj'
+
+    def __init__(self, field_name, obj):
+        self.field_name = field_name
+        self.obj= obj
+
+    def __str__(self):
+        return "Mandatory field '%s' was not set before first access on " \
+               "object '%s'." % (self.field_name, self.obj)
+
+
+class Factory(object):
+    """
+    Defines a default values' factory for a `Field`, based on a user-provided initialization function.
+
+    >>> class Foo:
+    ...     foo = Field(default=Factory(lambda: ["hello"]))
+    ...
+    >>> o = Foo()
+    >>> o.foo
+    ['hello']
+
+    """
+    __slots__ = ('create',)
+
+    def __init__(self, f):
+        """
+        Constructs a factory with initialization function `f`.
+        `f` should have no mandatory argument and should return the default value to use.
+
+        :param f:
+        """
+        self.create = f
+
+
+def factory(f):
+    """ decorator to easily create `Factory` objects from functions.
+
+    >>> @factory
+    ... def my_default():
+    ...    return "hello"
+    ...
+    >>> class Foo:
+    ...     foo = Field(default=my_default)
+    ...
+    >>> o = Foo()
+    >>> o.foo
+    'hello'
+
+    :param f:
+    :return:
+    """
+    return Factory(f)
+
+
+PY36 = sys.version_info >= (3, 6)
+
+
+class Field(object):
+    """
+    A class-level attribute definition.
+
+    An easy way to create a field in a class without writing any `__init__` method.
+    Typically useful for mixin classes.
+
+    The class has to have a __dict__ in order for this property to work, so classes with `__slots__` are not supported.
+    ---
+    Note on performance:
+    This class implements the descriptor protocol but is actually used on the *first* field
+    access only. Indeed, the first time it is accessed on read or write on a specific instance,
+    the `Field` descriptor is replaced with the actual value so that subsequent calls are native
+    python access calls.
+
+    Inspired by
+     - @lazy_attribute (sagemath)
+     - @cached_property (werkzeug) and https://stackoverflow.com/questions/24704147/python-what-is-a-lazy-property
+     - https://stackoverflow.com/questions/42023852/how-can-i-get-the-attribute-name-when-working-with-descriptor-protocol-in-python
+     - attrs / dataclasses / autoclass
+    """
+    __slots__ = ('default', 'name')
+
+    def __init__(self, default=NA, name=None):
+        """
+        Defines a `Field` in a class. The field will be lazily-defined, so if you create an instance of the class, the
+        field will not have any value until it is first read or set.
+
+        By default fields are mandatory, which means that you must set them before reading them (otherwise a
+        `MandatoryFieldInitError` will be raised).
+
+        You can define an optional field by providing a `default` value. This value will not be copied but used "as is"
+        on all instances, following python's classical pattern for default values. If you wish to run specific code to
+        instantiate the default value, you may provide a `Factory`
+
+        In python < 3.6 the `name` attribute is mandatory and should be the same name than the one used used in the
+        class field definition (i.e. you should define the field as '<name> = Field(name=<name>)').
+
+        :param default:
+        :param name: in python < 3.6 this is mandatory, and should be the same name than the one used used in the class
+            definition (typically, '<name> = Field(name=<name>').
+        """
+        self.default = default
+        if not PY36 and name is None:
+            raise ValueError("`name` is mandatory in python < 3.6")
+        self.name = name
+
+    def __set_name__(self, owner, name):
+        # called at class creation time
+        if self.name is not None and self.name != name:
+            raise ValueError("Field name '%s' in class '%s' does not correspond to explicitly declared name '%s' in "
+                             "Field constructor" % (name, owner.__class__, self.name))
+        self.name = name
+
+    def __get__(self, obj, objtype):
+        if obj is None:
+            # class-level call ?
+            return self
+
+        if self.default is NA:
+            # mandatory
+            raise MandatoryFieldInitError(self.name, obj)
+
+        # Check if the field is already set in the object __dict__
+        value = obj.__dict__.get(self.name, _unset)
+
+        if value is _unset:
+            # nominal case: we set the attribute in the object __dict__ on first read
+            # so that next reads will be pure native field access
+            if isinstance(self.default, Factory):
+                value = self.default.create()
+            else:
+                value = self.default
+            obj.__dict__[self.name] = value
+        # else:
+            # this was probably a manual call of __get__ (or a concurrent call of the first access)
+        return value
+
+    def __set__(self, obj, value):
+        if obj is not None:
+            # set the attribute in the object __dict__ on first read
+            # so that next reads will be pure native field access
+            obj.__dict__[self.name] = value
+        else:
+            # class-level call ? what TODO ?
+            pass
+
+    def __delete__(self, obj):
+        try:
+            del obj.__dict__[self.name]
+        except KeyError:
+            # silently ignore: the field has not been set on that object yet,
+            # and we wont delete the class `Field` anyway...
+            pass
