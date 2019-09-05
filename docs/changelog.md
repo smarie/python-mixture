@@ -1,5 +1,10 @@
 # Changelog
 
-### 0.5.0 - First public version
+### 0.1.0 - First public version
 
-Forked from internal repository.
+**Mix-in basics**:
+
+ - `field` class to easily define class fields in a mixin without defining a `__init__`.
+ - `@apply_mixins` decorator to apply mixins to a class without inheritance, by copying members (="monkeypatching")
+ - Light documentation
+ 
