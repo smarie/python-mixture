@@ -18,8 +18,8 @@ class MixinContainsInitWarning(UserWarning):
     pass
 
 
-class MixinNotRegisterableWarning(UserWarning):
-    pass
+# class MixinNotRegisterableWarning(UserWarning):
+#     pass
 
 
 def apply_mixins(*mixin_classes):
@@ -85,10 +85,12 @@ def apply_mixins(*mixin_classes):
             try:
                 mixin_class.register(out_cls)
             except AttributeError:
-                warn(
-                    "Mixin class '%s' does not seem to be an ABC so it can not be registered as the virtual parent of "
-                    "class '%s'. As a result issubclass and isinstance will result `False`. You probably wish your "
-                    "mixin class to inherit from `ABC` or use meta `ABCMeta` to fix this", MixinNotRegisterableWarning)
+                # warn(
+                #     "Mixin class '%s' does not seem to be an ABC so it can not be registered as the virtual parent of "
+                #     "class '%s'. As a result issubclass and isinstance will result `False`. You probably wish your "
+                #     "mixin class to inherit from `ABC` or use meta `ABCMeta` to fix this", MixinNotRegisterableWarning)
+                # ignore silently
+                pass
 
         return out_cls
 
@@ -162,7 +164,7 @@ def list_all_members_to_copy(source_cls, dest_cls):
 
 def copy_cls_vars(cls):
     """
-    From https://github.com/yupeng0921/pymixin/blob/master/mixin.py
+    "Strongly inspired" :) by https://github.com/yupeng0921/pymixin/blob/master/mixin.py
     :param cls:
     :return:
     """

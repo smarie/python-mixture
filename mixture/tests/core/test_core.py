@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from mixture.core import MixinNotRegisterableWarning, MixinContainsInitWarning
+from mixture.core import MixinContainsInitWarning
 from mixture import apply_mixins, Field, Factory, factory
 
 from ..utils import ABC
@@ -89,15 +89,15 @@ def test_apply_mixins_warning_init():
             pass
 
 
-def test_apply_mixins_warning_abc():
-    """Checks that a warning is issued when the mixin class is not an ABC"""
-    class DummyMixinNotAbc(type):
-        pass
-
-    with pytest.warns(MixinNotRegisterableWarning, match="does not seem to be an ABC"):
-        @apply_mixins(DummyMixinNotAbc)
-        class MyClass(object):
-            pass
+# def test_apply_mixins_warning_abc():
+#     """Checks that a warning is issued when the mixin class is not an ABC"""
+#     class DummyMixinNotAbc(type):
+#         pass
+#
+#     with pytest.warns(MixinNotRegisterableWarning, match="does not seem to be an ABC"):
+#         @apply_mixins(DummyMixinNotAbc)
+#         class MyClass(object):
+#             pass
 
 
 @pytest.mark.parametrize('read_first', [False, True], ids="read_first={}".format)
