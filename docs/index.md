@@ -55,10 +55,10 @@ class TweeterMixin:
         print("tweeting %s" % how)
 ```
 
-See [API documentation](./api_reference.md) for details on `field` and `Factory`.
+See [API documentation](./api_reference.md) for details on `field`.
 
 !!! success "No performance overhead"
-    For those of the readers who have recognized it: `field` is a ["non-data" python descriptor](https://docs.python.org/3.7/howto/descriptor.html). So the first time the attribute is read, the cost of a small python method call extra cost is paid. *But* afterwards the attribute is replaced with a native attribute inside the object `__dict__`, so subsequent calls use native access without overhead. This was inspired by [werkzeug's @cached_property](https://tedboy.github.io/flask/generated/generated/werkzeug.cached_property.html).
+    For those of the readers who have recognized it: `field` returns a ["non-data" python descriptor](https://docs.python.org/3.7/howto/descriptor.html). So the first time the attribute is read, a small python method call extra cost is paid. *But* afterwards the attribute is replaced with a native attribute inside the object `__dict__`, so subsequent calls use native access without overhead. This was inspired by [werkzeug's @cached_property](https://tedboy.github.io/flask/generated/generated/werkzeug.cached_property.html).
 
 !!! info "Alternatives for class-level field definition"
     You can obviously use more advanced libraries such as [`attrs`](http://www.attrs.org) or [`dataclasses`](https://docs.python.org/3/library/dataclasses.html) but be aware that by default they create an `__init__` method for you. The intent here is to provide a "minimal viable product" to define class-level fields without creating `__init__` methods.

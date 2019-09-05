@@ -203,10 +203,30 @@ class MandatoryFieldInitError(Exception):
 PY36 = sys.version_info >= (3, 6)
 
 
-class field(object):
+def field(default=MISSING, default_factory=MISSING, doc=None, name=None):
     """
-    A class-level attribute definition. It allows developers to define an attribute without writing an `__init__`
-    method. Typically useful for mixin classes.
+    Returns a class-level attribute definition. It allows developers to define an attribute without writing an
+    `__init__` method. Typically useful for mixin classes.
+
+    Lazyness
+    --------
+    The field will be lazily-defined, so if you create an instance of the class, the field will not have any value
+    until it is first read or written.
+
+    Optional/Mandatory
+    ------------------
+    By default fields are mandatory, which means that you must set them before reading them (otherwise a
+    `MandatoryFieldInitError` will be raised). You can define an optional field by providing a `default` value.
+    This value will not be copied but used "as is" on all instances, following python's classical pattern for default
+    values. If you wish to run specific code to instantiate the default value, you may provide a `default_factory`
+    callable instead. That callable should have no mandatory argument and should return the default value.
+
+    Documentation
+    -------------
+    A docstring can be provided for code readability.
+
+    Example
+    -------
 
     >>> class Foo:
     ...     foo = field(default='bar', doc="This is an optional field with a default value")
@@ -234,50 +254,48 @@ class field(object):
         ...
     mixture.core.MandatoryFieldInitError: Mandatory field 'foo3' was not set before first access on object...
 
-    You can define custom factory functions for the default
-
+    Limitations
+    -----------
     The class has to have a `__dict__` in order for this property to work, so classes with `__slots__` are not supported.
-    ---
-    Note on performance:
-    This class implements the "non-data" descriptor protocol and is actually used on the *first* field
-    read access only. Indeed, the first time it is accessed on read on a specific instance,
-    the `field` descriptor is replaced with the actual value so that subsequent calls are native
-    python access calls.
+
+    Performance overhead
+    --------------------
+    The `Field` class implements the "non-data" descriptor protocol. So the first time the attribute is read, a small
+    python method call extra cost is paid. *But* afterwards the attribute is replaced with a native attribute
+    inside the object `__dict__`, so subsequent calls use native access without overhead.
+    This was inspired by
+    [werkzeug's @cached_property](https://tedboy.github.io/flask/generated/generated/werkzeug.cached_property.html).
 
     Inspired by
+    -----------
+    This method was inspired by
+
      - @lazy_attribute (sagemath)
      - @cached_property (werkzeug) and https://stackoverflow.com/questions/24704147/python-what-is-a-lazy-property
      - https://stackoverflow.com/questions/42023852/how-can-i-get-the-attribute-name-when-working-with-descriptor-protocol-in-python
      - attrs / dataclasses
+            In python < 3.6 the `name` attribute is mandatory and should be the same name than the one used used in the
+        class field definition (i.e. you should define the field as '<name> = field(name=<name>)').
+
+    :param default: a default value for the field. Providing a `default` makes the field "optional". `default` value
+        is not copied on new instances, if you wish a new copy to be created you should provide a `default_factory`
+        instead. Only one of `default` or `default_factory` should be provided.
+    :param default_factory: a factory that will be called (without arguments) to get the default value for that
+        field, everytime one is needed. Providing a `default_factory` makes the field "optional". Only one of `default`
+        or `default_factory` should be provided.
+    :param doc: documentation for the field. This is mostly for class readability purposes for now.
+    :param name: in python < 3.6 this is mandatory, and should be the same name than the one used used in the class
+        definition (typically, `class Foo:    <name> = field(name=<name>)`).
+    :return:
     """
+    return Field(default=default, default_factory=default_factory, doc=doc, name=name)
+
+
+class Field(object):
     __slots__ = ('default', 'is_factory', 'name', 'doc')
 
     def __init__(self, default=MISSING, default_factory=MISSING, doc=None, name=None):
-        """
-        Defines a `field` in a class. The field will be lazily-defined, so if you create an instance of the class, the
-        field will not have any value until it is first read or set.
-
-        By default fields are mandatory, which means that you must set them before reading them (otherwise a
-        `MandatoryFieldInitError` will be raised).
-
-        You can define an optional field by providing a `default` value. This value will not be copied but used "as is"
-        on all instances, following python's classical pattern for default values. If you wish to run specific code to
-        instantiate the default value, you may provide a `Factory`
-
-        In python < 3.6 the `name` attribute is mandatory and should be the same name than the one used used in the
-        class field definition (i.e. you should define the field as '<name> = field(name=<name>)').
-
-        :param default: a default value for the field. Providing a `default` makes the field "optional", by default it
-            is not (it is mandatory). default values are not copied on new instances, if you wish a new copy to be
-            created you should provide a `default_factory` instead. Only one of `default` and `default_factory` should
-            be provided.
-        :param default_factory: a factory that will be called (without arguments) to get the default value for that
-            field, everytime one is needed. Providing a `default_factory` makes the field "optional", by default it
-            is not (it is mandatory). Only one of `default` and `default_factory` should be provided.
-        :param doc: documentation for the field. This is mostly for class readability purposes for now.
-        :param name: in python < 3.6 this is mandatory, and should be the same name than the one used used in the class
-            definition (typically, '<name> = field(name=<name>').
-        """
+        """See help(field) for details"""
         if default_factory is not MISSING:
             if default is not MISSING:
                 raise ValueError("Only one of `default` and `default_factory` should be provided")
