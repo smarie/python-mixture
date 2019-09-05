@@ -6,8 +6,7 @@ import sys
 
 import pytest
 
-from mixture.core import MixinContainsInitWarning
-from mixture import apply_mixins, Field, Factory, factory
+from mixture import apply_mixins, field, MixinContainsInitWarning, MandatoryFieldInitError
 
 from ..utils import ABC
 
@@ -101,27 +100,36 @@ def test_apply_mixins_warning_init():
 
 
 @pytest.mark.parametrize('read_first', [False, True], ids="read_first={}".format)
-@pytest.mark.parametrize('with_factory', [None, 'class', 'decorator'], ids="with_factory={}".format)
-def test_field(read_first, with_factory):
-    """Checks that Field works as expected"""
+@pytest.mark.parametrize('type_', ['default_factory', 'default', 'mandatory'], ids="type_={}".format)
+def test_field(read_first, type_):
+    """Checks that field works as expected"""
 
-    if with_factory == 'decorator':
-        @factory
-        def d():
-            return False
-    elif with_factory == 'class':
-        d = Factory(lambda: False)
-    elif with_factory is None:
-        d= False
+    if type_ == 'default_factory':
+        class Tweety:
+            afraid = field(default_factory=lambda: False)
+    elif type_ == 'default':
+        class Tweety:
+            afraid = field(default=False)
+    elif type_ == 'mandatory':
+        class Tweety:
+            afraid = field()
     else:
         raise ValueError()
 
-    class Tweety:
-        afraid = Field(default=d)
-
+    # instantiate
     t = Tweety()
-    if read_first:
+
+    if not read_first:
+        # set
         t.afraid = False
-    assert not t.afraid
+
+    # read
+    if read_first and type_ == 'mandatory':
+        with pytest.raises(MandatoryFieldInitError):
+            assert not t.afraid
+    else:
+        assert not t.afraid
+
+    # set
     t.afraid = True
     assert t.afraid

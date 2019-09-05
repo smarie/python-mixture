@@ -6,7 +6,7 @@
 #
 import pytest
 
-from mixture import apply_mixins, Field
+from mixture import apply_mixins, field
 
 from ..utils import ABC
 
@@ -20,7 +20,7 @@ def test_doc_basic(capsys, do_apply):
 
     if not do_apply:
         class TweeterMixin:
-            afraid = Field(default=False,
+            afraid = field(default=False,
                            doc="""Status of the tweeter. When this is `True`, 
                            tweets will be lighter""")
 
@@ -33,7 +33,7 @@ def test_doc_basic(capsys, do_apply):
 
     else:
         class TweeterMixin(ABC):
-            afraid = Field(default=False)
+            afraid = field(default=False)
 
             def tweet(self):
                 how = "lightly" if self.afraid else "loudly"

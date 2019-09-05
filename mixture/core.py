@@ -181,13 +181,13 @@ def copy_cls_vars(cls):
     return cls_vars
 
 
-NA = object()
+MISSING = object()
 _unset = object()
 
 
 class MandatoryFieldInitError(Exception):
     """
-    Raised by Field when a mandatory field is read without being set first.
+    Raised by `field` when a mandatory field is read without being set first.
     """
     __slots__ = 'field_name', 'obj'
 
@@ -200,79 +200,61 @@ class MandatoryFieldInitError(Exception):
                "object '%s'." % (self.field_name, self.obj)
 
 
-class Factory(object):
-    """
-    Defines a default values' factory for a `Field`, based on a user-provided initialization function.
-
-    >>> class Foo:
-    ...     foo = Field(default=Factory(lambda: ["hello"]))
-    ...
-    >>> o = Foo()
-    >>> o.foo
-    ['hello']
-
-    """
-    __slots__ = ('create',)
-
-    def __init__(self, f):
-        """
-        Constructs a factory with initialization function `f`.
-        `f` should have no mandatory argument and should return the default value to use.
-
-        :param f:
-        """
-        self.create = f
-
-
-def factory(f):
-    """ decorator to easily create `Factory` objects from functions.
-
-    >>> @factory
-    ... def my_default():
-    ...    return "hello"
-    ...
-    >>> class Foo:
-    ...     foo = Field(default=my_default)
-    ...
-    >>> o = Foo()
-    >>> o.foo
-    'hello'
-
-    :param f:
-    :return:
-    """
-    return Factory(f)
-
-
 PY36 = sys.version_info >= (3, 6)
 
 
-class Field(object):
+class field(object):
     """
-    A class-level attribute definition.
+    A class-level attribute definition. It allows developers to define an attribute without writing an `__init__`
+    method. Typically useful for mixin classes.
 
-    An easy way to create a field in a class without writing any `__init__` method.
-    Typically useful for mixin classes.
+    >>> class Foo:
+    ...     foo = field(default='bar', doc="This is an optional field with a default value")
+    ...     foo2 = field(default_factory=list, doc="This is an optional with a default value factory")
+    ...     foo3 = field(doc="This is a mandatory field")
+    ...
+    >>> o = Foo()
+    >>> o.foo   # read access with default value
+    'bar'
+    >>> o.foo2  # read access with default value factory
+    []
+    >>> o.foo2 = 12  # write access
+    >>> o.foo2
+    12
+    >>> o.foo3  # read access for mandatory attr without init
+    Traceback (most recent call last):
+        ...
+    mixture.core.MandatoryFieldInitError: Mandatory field 'foo3' was not set before first access on object...
+    >>> o.foo3 = True
+    >>> o.foo3  # read access for mandatory attr after init
+    True
+    >>> del o.foo3  # all attributes can be deleted, same behaviour than new object
+    >>> o.foo3
+    Traceback (most recent call last):
+        ...
+    MandatoryFieldInitError
 
-    The class has to have a __dict__ in order for this property to work, so classes with `__slots__` are not supported.
+    You can define custom factory functions for the default
+
+    The class has to have a `__dict__` in order for this property to work, so classes with `__slots__` are not supported.
     ---
     Note on performance:
-    This class implements the descriptor protocol but is actually used on the *first* field
-    access only. Indeed, the first time it is accessed on read or write on a specific instance,
-    the `Field` descriptor is replaced with the actual value so that subsequent calls are native
+    This class implements the "non-data" descriptor protocol and is actually used on the *first* field
+    read access only. Indeed, the first time it is accessed on read on a specific instance,
+    the `field` descriptor is replaced with the actual value so that subsequent calls are native
     python access calls.
 
     Inspired by
      - @lazy_attribute (sagemath)
      - @cached_property (werkzeug) and https://stackoverflow.com/questions/24704147/python-what-is-a-lazy-property
      - https://stackoverflow.com/questions/42023852/how-can-i-get-the-attribute-name-when-working-with-descriptor-protocol-in-python
-     - attrs / dataclasses / autoclass
+     - attrs / dataclasses
     """
-    __slots__ = ('default', 'name', 'doc')
+    __slots__ = ('default', 'is_factory', 'name', 'doc')
 
-    def __init__(self, default=NA, doc=None, name=None):
+    def __init__(self, default=MISSING, default_factory=MISSING, doc=None, name=None):
         """
-        Defines a `Field` in a class. The field will be lazily-defined, so if you create an instance of the class, the
+        Defines a `field` in a class. The field will be lazily-defined, so if you create an instance of the class, the
         field will not have any value until it is first read or set.
 
         By default fields are mandatory, which means that you must set them before reading them (otherwise a
@@ -283,14 +265,29 @@ class Field(object):
         instantiate the default value, you may provide a `Factory`
 
         In python < 3.6 the `name` attribute is mandatory and should be the same name than the one used used in the
-        class field definition (i.e. you should define the field as '<name> = Field(name=<name>)').
+        class field definition (i.e. you should define the field as '<name> = field(name=<name>)').
 
-        :param default:
+        :param default: a default value for the field. Providing a `default` makes the field "optional", by default it
+            is not (it is mandatory). default values are not copied on new instances, if you wish a new copy to be
+            created you should provide a `default_factory` instead. Only one of `default` and `default_factory` should
+            be provided.
+        :param default_factory: a factory that will be called (without arguments) to get the default value for that
+            field, everytime one is needed. Providing a `default_factory` makes the field "optional", by default it
+            is not (it is mandatory). Only one of `default` and `default_factory` should be provided.
         :param doc: documentation for the field. This is mostly for class readability purposes for now.
         :param name: in python < 3.6 this is mandatory, and should be the same name than the one used used in the class
-            definition (typically, '<name> = Field(name=<name>').
+            definition (typically, '<name> = field(name=<name>').
         """
-        self.default = default
+        if default_factory is not MISSING:
+            if default is not MISSING:
+                raise ValueError("Only one of `default` and `default_factory` should be provided")
+            else:
+                self.default = default_factory
+                self.is_factory = True
+        else:
+            self.default = default
+            self.is_factory = False
+
         if not PY36 and name is None:
             raise ValueError("`name` is mandatory in python < 3.6")
         self.name = name
@@ -299,8 +296,8 @@ class Field(object):
     def __set_name__(self, owner, name):
         # called at class creation time
         if self.name is not None and self.name != name:
-            raise ValueError("Field name '%s' in class '%s' does not correspond to explicitly declared name '%s' in "
-                             "Field constructor" % (name, owner.__class__, self.name))
+            raise ValueError("field name '%s' in class '%s' does not correspond to explicitly declared name '%s' in "
+                             "field constructor" % (name, owner.__class__, self.name))
         self.name = name
 
     def __get__(self, obj, objtype):
@@ -308,7 +305,7 @@ class Field(object):
             # class-level call ?
             return self
 
-        if self.default is NA:
+        if self.default is MISSING:
             # mandatory
             raise MandatoryFieldInitError(self.name, obj)
 
@@ -318,8 +315,8 @@ class Field(object):
         if value is _unset:
             # nominal case: we set the attribute in the object __dict__ on first read
             # so that next reads will be pure native field access
-            if isinstance(self.default, Factory):
-                value = self.default.create()
+            if self.is_factory:
+                value = self.default()
             else:
                 value = self.default
             obj.__dict__[self.name] = value
@@ -327,19 +324,11 @@ class Field(object):
             # this was probably a manual call of __get__ (or a concurrent call of the first access)
         return value
 
-    def __set__(self, obj, value):
-        if obj is not None:
-            # set the attribute in the object __dict__ on first read
-            # so that next reads will be pure native field access
-            obj.__dict__[self.name] = value
-        else:
-            # class-level call ? what TODO ?
-            pass
-
-    def __delete__(self, obj):
-        try:
-            del obj.__dict__[self.name]
-        except KeyError:
-            # silently ignore: the field has not been set on that object yet,
-            # and we wont delete the class `Field` anyway...
-            pass
+    # not needed apparently
+    # def __delete__(self, obj):
+    #     try:
+    #         del obj.__dict__[self.name]
+    #     except KeyError:
+    #         # silently ignore: the field has not been set on that object yet,
+    #         # and we wont delete the class `field` anyway...
+    #         pass
