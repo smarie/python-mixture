@@ -58,6 +58,8 @@ def apply_mixins(*mixin_classes):
                 setattr(orig_cls, m_name, member)
 
             # fill the __from_mixins__ field with the list of names copied
+            # TODO maybe it would be better that the field is an ordered tuple by mixin order ot appearance.
+            #    but that is quite tricky since some names can be overridden by several mixins
             setattr(orig_cls, FROM_MIXINS_TAG, tuple(to_copy.keys()))
 
             out_cls = orig_cls

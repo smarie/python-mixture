@@ -45,8 +45,7 @@ def test_doc_basic(capsys, do_apply):
             pass
 
         # a special field is set for monkeypatched members
-        assert set(MagicDuck.__from_mixins__[0:2]) == set(('afraid', 'tweet'))
-        assert MagicDuck.__from_mixins__[2] == 'bark'
+        assert set(MagicDuck.__from_mixins__) == {'afraid', 'tweet', 'bark'}
 
     # check the class
     assert issubclass(MagicDuck, BarkerMixin) is not do_apply
