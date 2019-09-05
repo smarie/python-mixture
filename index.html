@@ -256,8 +256,35 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-mix-in-mechanisms" class="md-nav__link">
-    Basic mix-in mechanisms
+  <a href="#1-mix-in-basics" class="md-nav__link">
+    1. Mix-in basics
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-defining" class="md-nav__link">
+    a- Defining
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-mixing" class="md-nav__link">
+    b- Mixing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-handy-mix-in-classes" class="md-nav__link">
+    2. Handy Mix-in classes
   </a>
   
 </li>
@@ -318,6 +345,18 @@
 
 
   <li class="md-nav__item">
+    <a href="api_reference/" title="API reference" class="md-nav__link">
+      API reference
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="changelog/" title="Changelog" class="md-nav__link">
       Changelog
     </a>
@@ -360,8 +399,35 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-mix-in-mechanisms" class="md-nav__link">
-    Basic mix-in mechanisms
+  <a href="#1-mix-in-basics" class="md-nav__link">
+    1. Mix-in basics
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-defining" class="md-nav__link">
+    a- Defining
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-mixing" class="md-nav__link">
+    b- Mixing
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-handy-mix-in-classes" class="md-nav__link">
+    2. Handy Mix-in classes
   </a>
   
 </li>
@@ -428,70 +494,107 @@
 <p><em>Mixin classes for great objects !</em></p>
 <p><a href="https://pypi.python.org/pypi/mixture/"><img alt="Python versions" src="https://img.shields.io/pypi/pyversions/mixture.svg" /></a> <a href="https://travis-ci.org/smarie/python-mixture"><img alt="Build Status" src="https://travis-ci.org/smarie/python-mixture.svg?branch=master" /></a> <a href="https://smarie.github.io/python-mixture/junit/report.html"><img alt="Tests Status" src="https://smarie.github.io/python-mixture/junit/junit-badge.svg?dummy=8484744" /></a> <a href="https://codecov.io/gh/smarie/python-mixture"><img alt="codecov" src="https://codecov.io/gh/smarie/python-mixture/branch/master/graph/badge.svg" /></a></p>
 <p><a href="https://smarie.github.io/python-mixture/"><img alt="Documentation" src="https://img.shields.io/badge/doc-latest-blue.svg" /></a> <a href="https://pypi.python.org/pypi/mixture/"><img alt="PyPI" src="https://img.shields.io/pypi/v/mixture.svg" /></a> <a href="https://pepy.tech/project/mixture"><img alt="Downloads" src="https://pepy.tech/badge/mixture" /></a> <a href="https://pepy.tech/project/mixture"><img alt="Downloads per week" src="https://pepy.tech/badge/mixture/week" /></a> <a href="https://github.com/smarie/python-mixture/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/smarie/python-mixture.svg" /></a></p>
-<p><strong>TODO</strong></p>
+<p>Creating <a href="https://en.wikipedia.org/wiki/Mixin">mixin classes</a> is a quite elegant way to design reusable object-oriented code in python. Doing it right might be tricky as python provides many alternate ways. This library provides</p>
+<ul>
+<li>a minimal <code>field</code> implementation enabling developers to create mixin classes without having to define <code>__init__</code> methods (thus avoiding the multiparent initialization hell) </li>
+<li>an <code>@apply_mixins</code> decorator for those users wishing to avoid inheritance <em>at all</em> when mixing classes</li>
+<li>(TODO) provides a few reusable mix-in class</li>
+</ul>
 <h2 id="installing">Installing<a class="headerlink" href="#installing" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span>&gt; pip install mixture
 </pre></div>
 
 
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
-<h3 id="basic-mix-in-mechanisms">Basic mix-in mechanisms<a class="headerlink" href="#basic-mix-in-mechanisms" title="Permanent link">&para;</a></h3>
-<p>A mix-in class is typically </p>
+<h3 id="1-mix-in-basics">1. Mix-in basics<a class="headerlink" href="#1-mix-in-basics" title="Permanent link">&para;</a></h3>
+<h4 id="a-defining">a- Defining<a class="headerlink" href="#a-defining" title="Permanent link">&para;</a></h4>
+<p>A mix-in class in python is typically a class :</p>
 <ul>
-<li>a class without constructor, </li>
-<li>that implements some functionality as a set of functions, based on the existence of certain fields.</li>
-<li>that may include include class attributes (for example to add fields using the "descriptor protocol")</li>
+<li><strong>without <code>__init__</code> constructor</strong> (to avoid constructor inheritance hell in case of multiple inheritance), </li>
+<li>providing a set of <strong>instance/static/class methods</strong> to provide some functionality. This functionality may be based on the existence of certain fields.</li>
+<li>that may also include <strong>class attributes</strong>. This can be used to explicitly add a field to an object without defining an <code>__init__</code> method, as we'll see below)</li>
+<li>without parent classes, or where the <strong>parent classes are mix-in classes</strong> themselves</li>
 </ul>
-<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span>
-
-<span class="k">class</span> <span class="nc">BarkerMixin</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<p>For example this is a very basic mix-in class without any requirement on instance attributes:</p>
+<div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">BarkerMixin</span><span class="p">:</span>
     <span class="k">def</span> <span class="nf">bark</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;barking loudly&quot;</span><span class="p">)</span>
 </pre></div>
 
 
-<p>In native python you can already use mixin classes by inheriting from them:</p>
-<div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">Duck</span><span class="p">(</span><span class="n">BarkerMixin</span><span class="p">):</span>
+<p>Thanks to the <code>field</code> goodie provided in this library, we can easily create mix-in classes that include fields definitions without defining a constructor:</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">mixture</span> <span class="kn">import</span> <span class="n">field</span>
+
+<span class="k">class</span> <span class="nc">TweeterMixin</span><span class="p">:</span>
+    <span class="n">afraid</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
+                   <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;Status of the tweeter. When this is `True`,&quot;</span> 
+                       <span class="s2">&quot;tweets will be less aggressive.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">tweet</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">how</span> <span class="o">=</span> <span class="s2">&quot;lightly&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">afraid</span> <span class="k">else</span> <span class="s2">&quot;loudly&quot;</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;tweeting </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">how</span><span class="p">)</span>
+</pre></div>
+
+
+<p>See <a href="api_reference/">API documentation</a> for details on <code>field</code>.</p>
+<div class="admonition success">
+<p class="admonition-title">No performance overhead</p>
+<p>For those of the readers who have recognized it: <code>field</code> returns a <a href="https://docs.python.org/3.7/howto/descriptor.html">"non-data" python descriptor</a>. So the first time the attribute is read, a small python method call extra cost is paid. <em>But</em> afterwards the attribute is replaced with a native attribute inside the object <code>__dict__</code>, so subsequent calls use native access without overhead. This was inspired by <a href="https://tedboy.github.io/flask/generated/generated/werkzeug.cached_property.html">werkzeug's @cached_property</a>.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title">Alternatives for class-level field definition</p>
+<p>You can obviously use more advanced libraries such as <a href="http://www.attrs.org"><code>attrs</code></a> or <a href="https://docs.python.org/3/library/dataclasses.html"><code>dataclasses</code></a> but be aware that by default they create an <code>__init__</code> method for you. The intent here is to provide a "minimal viable product" to define class-level fields without creating <code>__init__</code> methods.</p>
+</div>
+<h4 id="b-mixing">b- Mixing<a class="headerlink" href="#b-mixing" title="Permanent link">&para;</a></h4>
+<p>In python we can already use such mixin classes without additional framework, simply by inheriting from them thanks to python's multiple inheritance capabilities:</p>
+<div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">MagicDuck</span><span class="p">(</span><span class="n">BarkerMixin</span><span class="p">,</span> <span class="n">TweeterMixin</span><span class="p">):</span>
     <span class="k">pass</span>
 </pre></div>
 
 
-<p>In addition, this library provides a way to apply mixin classes <em>without inheritance</em>:</p>
-<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">mixture</span> <span class="kn">import</span> <span class="n">apply_mixins</span>
-
-<span class="nd">@apply_mixins</span><span class="p">(</span><span class="n">BarkerMixin</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">Duck</span><span class="p">:</span>
-    <span class="k">pass</span>
-</pre></div>
-
-
-<p>in that case a special field is set on the class, containing the list of all members that were created as the result of copying from mixins:</p>
-<div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">Duck</span><span class="o">.</span><span class="n">__from_mixins__</span>
-<span class="p">(</span><span class="s1">&#39;bark&#39;</span><span class="p">,)</span>
-</pre></div>
-
-
-<p>and if the mixin is an <a href="https://docs.python.org/3/library/abc.html">Abstract Base Class</a>, the decorated class is registered as a virtual subclass:</p>
-<div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">Duck</span><span class="p">,</span> <span class="n">BarkerMixin</span><span class="p">)</span>
-<span class="bp">True</span>
- <span class="sb">``</span><span class="err">`</span>
-
-<span class="n">Lets</span> <span class="n">create</span> <span class="n">a</span> <span class="n">barking</span> <span class="n">duck</span><span class="p">:</span>
-
-<span class="sb">``</span><span class="err">`</span><span class="n">python</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">d</span> <span class="o">=</span> <span class="n">Duck</span><span class="p">()</span>
+<p>Let's try it by creating a barking and tweeting duck:</p>
+<div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">d</span> <span class="o">=</span> <span class="n">MagicDuck</span><span class="p">()</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">d</span><span class="o">.</span><span class="n">bark</span><span class="p">()</span>
 <span class="n">barking</span> <span class="n">loudly</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">BarkerMixin</span><span class="p">)</span>
-<span class="bp">True</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">d</span><span class="o">.</span><span class="n">tweet</span><span class="p">()</span>
+<span class="n">tweeting</span> <span class="n">loudly</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">d</span><span class="o">.</span><span class="n">afraid</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">d</span><span class="o">.</span><span class="n">tweet</span><span class="p">()</span>
+<span class="n">tweeting</span> <span class="n">lightly</span>
 </pre></div>
 
 
-<h2 id="main-features-benefits">Main features / benefits<a class="headerlink" href="#main-features-benefits" title="Permanent link">&para;</a></h2>
+<p>In addition, this library provides a way to apply mixin classes <em>without inheritance</em>. The author does not have any opinion on this alternative, it may be marginally faster as the MRO cost is not paid for accessing members, but this would have to be studied (if you're interested, please discuss it <a href="https://github.com/smarie/python-mixture/issues/1">here</a>).</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">mixture</span> <span class="kn">import</span> <span class="n">apply_mixins</span>
+
+<span class="nd">@apply_mixins</span><span class="p">(</span><span class="n">BarkerMixin</span><span class="p">,</span> <span class="n">TweeterMixin</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MagicDuck</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+
+<p>in that case a special field is set on the class for reference, containing the list of all members that were created as the result of copying from mixins:</p>
+<div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">MagicDuck</span><span class="o">.</span><span class="n">__from_mixins__</span>
+<span class="p">(</span><span class="s1">&#39;tweet&#39;</span><span class="p">,</span> <span class="s1">&#39;afraid&#39;</span><span class="p">,</span> <span class="s1">&#39;bark&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>and if the mixin is an <a href="https://docs.python.org/3/library/abc.html">Abstract Base Class</a>, the decorated class is registered as a virtual subclass so that <code>isinstance</code> and <code>issubclass</code> still work as expected.</p>
+<h3 id="2-handy-mix-in-classes">2. Handy Mix-in classes<a class="headerlink" href="#2-handy-mix-in-classes" title="Permanent link">&para;</a></h3>
 <p><strong>TODO</strong></p>
+<h2 id="main-features-benefits">Main features / benefits<a class="headerlink" href="#main-features-benefits" title="Permanent link">&para;</a></h2>
+<ul>
+<li>create mix-in classes without <code>__init__</code>, thanks to <code>field</code> </li>
+<li>optionally apply mix-ins without inheritance thanks to <code>@apply_mixins</code></li>
+</ul>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<p>This library was inspired by:</p>
 <ul>
 <li><a href="https://github.com/yupeng0921/pymixin"><code>pymixin</code></a></li>
+<li><a href="https://werkzeug.palletsprojects.com/en/0.15.x/utils/#werkzeug.utils.cached_property"><code>werkzeug.cached_property</code></a></li>
+<li><a href="http://www.attrs.org/"><code>attrs</code></a></li>
+<li><a href="https://docs.python.org/3/library/dataclasses.html"><code>dataclasses</code></a></li>
+<li><a href="https://smarie.github.io/python-autoclass/"><code>autoclass</code></a></li>
 </ul>
 <h3 id="others">Others<a class="headerlink" href="#others" title="Permanent link">&para;</a></h3>
 <p><em>Do you like this library ? You might also like <a href="https://github.com/smarie/OVERVIEW#python">my other python libraries</a></em> </p>
@@ -518,13 +621,13 @@
       <nav class="md-footer-nav__inner md-grid">
         
         
-          <a href="changelog/" title="Changelog" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="api_reference/" title="API reference" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Changelog
+                API reference
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">
