@@ -2,6 +2,7 @@
 #
 #  Copyright (c) Schneider Electric Industries, 2019. All right reserved.
 import sys
+from textwrap import dedent
 from warnings import warn
 
 try:  # python 3.5+
@@ -267,9 +268,9 @@ class Field(object):
      - https://stackoverflow.com/questions/42023852/how-can-i-get-the-attribute-name-when-working-with-descriptor-protocol-in-python
      - attrs / dataclasses / autoclass
     """
-    __slots__ = ('default', 'name')
+    __slots__ = ('default', 'name', 'doc')
 
-    def __init__(self, default=NA, name=None):
+    def __init__(self, default=NA, doc=None, name=None):
         """
         Defines a `Field` in a class. The field will be lazily-defined, so if you create an instance of the class, the
         field will not have any value until it is first read or set.
@@ -285,6 +286,7 @@ class Field(object):
         class field definition (i.e. you should define the field as '<name> = Field(name=<name>)').
 
         :param default:
+        :param doc: documentation for the field. This is mostly for class readability purposes for now.
         :param name: in python < 3.6 this is mandatory, and should be the same name than the one used used in the class
             definition (typically, '<name> = Field(name=<name>').
         """
@@ -292,6 +294,7 @@ class Field(object):
         if not PY36 and name is None:
             raise ValueError("`name` is mandatory in python < 3.6")
         self.name = name
+        self.doc = dedent(doc) if doc is not None else None
 
     def __set_name__(self, owner, name):
         # called at class creation time

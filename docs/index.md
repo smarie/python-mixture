@@ -16,31 +16,71 @@
 
 ## Usage
 
-### Basic mix-in mechanisms
+### 1. Mix-in basics
 
-A mix-in class is typically 
+#### a- Defining
 
- - a class without constructor, 
- - that implements some functionality as a set of functions, based on the existence of certain fields.
- - that may include include class attributes (for example to add fields using the "descriptor protocol")
+A mix-in class in python is typically a class :
 
+ - **without `__init__` constructor** (to avoid constructor inheritance hell in case of multiple inheritance), 
+ - providing a set of **instance/static/class methods** to provide some functionality. This functionality may be based on the existence of certain fields.
+ - that may also include **class attributes**. This can be used to explicitly add a field to an object without defining an `__init__` method, as we'll see below)
+ - without parent classes, or where the **parent classes are mix-in classes** themselves
+
+For example this is a very basic mix-in class without any requirement on instance attributes:
 
 ```python
-from abc import ABC
-
-class BarkerMixin(ABC):
+class BarkerMixin:
     def bark(self):
         print("barking loudly")
 ```
 
-In native python you can already use mixin classes by inheriting from them:
+Thanks to the `Field` goodie provided in this library, we can easily create mix-in classes that include fields definitions without defining a constructor:
 
 ```python
-class Duck(BarkerMixin):
+from mixture import Field
+
+class TweeterMixin:
+    afraid = Field(default=False, 
+                   doc="Status of the tweeter. When this is `True`, tweets will be lighter")
+
+    def tweet(self):
+        how = "lightly" if self.afraid else "loudly"
+        print("tweeting %s" % how)
+```
+
+See [API documentation](./api_reference.md) for details on `Field` and `Factory`.
+
+!!! success "No performance overhead"
+    For those of the readers who have recognized it: `Field` implements the [python descriptor protocol](https://docs.python.org/3.7/howto/descriptor.html). *But* on first get/set the attribute is replaced with a native attribute inside the object `__dict__` so subsequent calls use native access without overhead. This was inspired by [werkzeug's @cached_property](https://tedboy.github.io/flask/generated/generated/werkzeug.cached_property.html).
+
+!!! info "Alternatives for class-level Field definition"
+    You can obviously use more advanced libraries such as [`attrs`](http://www.attrs.org) or [`dataclasses`](https://docs.python.org/3/library/dataclasses.html) but be aware that by default they create an `__init__` method for you. The intent here is to provide a "minimal viable product" to define class-level fields without creating `__init__` methods.
+
+#### b- Mixing
+
+In python we can already use such mixin classes without additional framework, simply by inheriting from them thanks to python's multiple inheritance capabilities:
+
+```python
+class MagicDuck(BarkerMixin, TweeterMixin):
     pass
 ```
 
-In addition, this library provides a way to apply mixin classes *without inheritance*:
+Let's try it by creating a barking and tweeting duck:
+
+```python
+>>> d = MagicDuck()
+>>> d.bark()
+barking loudly
+>>> d.tweet()
+tweeting loudly
+>>> d.afraid = True
+>>> d.tweet()
+tweeting lightly
+```
+
+
+In addition, this library provides a way to apply mixin classes *without inheritance*.
 
 ```python
 from mixture import apply_mixins
