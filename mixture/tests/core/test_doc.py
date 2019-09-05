@@ -39,15 +39,15 @@ def test_doc_basic(capsys, do_apply):
                 how = "lightly" if self.afraid else "loudly"
                 print("tweeting %s" % how)
 
-        @apply_mixins(TweeterMixin)
-        class MagicDuck(BarkerMixin):
+        @apply_mixins(BarkerMixin, TweeterMixin)
+        class MagicDuck:
             pass
 
         # a special field is set for monkeypatched members
-        assert set(MagicDuck.__from_mixins__) == {'tweet', 'afraid'}
+        assert MagicDuck.__from_mixins__ == ('afraid', 'tweet', 'bark')
 
     # check the class
-    assert issubclass(MagicDuck, BarkerMixin)
+    assert issubclass(MagicDuck, BarkerMixin) is not do_apply
     assert issubclass(MagicDuck, TweeterMixin)
 
     # lets create a barking MagicDuck
@@ -56,7 +56,8 @@ def test_doc_basic(capsys, do_apply):
     d.tweet()
     d.afraid = True
     d.tweet()
-    assert isinstance(d, BarkerMixin)
+    assert isinstance(d, BarkerMixin) is not do_apply
+    assert isinstance(d, TweeterMixin)
 
     with capsys.disabled():
         out, err = capsys.readouterr()
