@@ -35,7 +35,8 @@ LICENSE_LONG = 'License :: OSI Approved :: BSD License'
 version_for_download_url = get_version()
 DOWNLOAD_URL = URL + '/tarball/' + version_for_download_url
 
-KEYWORDS = 'object class mixin mix-in dict yaml json dataframe pandas hash comparison munch'
+KEYWORDS = 'object class mixin mix-in dict yaml json dataframe pandas hash comparison munch ' \
+           'boilerplate oop field attribute'
 # --Get the long description from the README file
 # with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 #    LONG_DESCRIPTION = f.read()
