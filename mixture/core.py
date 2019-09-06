@@ -253,31 +253,33 @@ def field(type=MISSING_TYPE,        # type: Type[T]
     >>> if sys.version_info < (3, 6):
     ...     pytest.skip('this doctest does not work on python <3.6 beacause `name` is mandatory')
     ...
-    >>> class Foo:
-    ...     foo = field(default='bar', doc="This is an optional field with a default value")
-    ...     foo2 = field(default_factory=list, doc="This is an optional with a default value factory")
-    ...     foo3 = field(doc="This is a mandatory field")
+    >>> class Foo(object):
+    ...     od = field(default='bar', doc="This is an optional field with a default value")
+    ...     odf = field(default_factory=list, doc="This is an optional with a default value factory")
+    ...     m = field(doc="This is a mandatory field")
+    ...     mt = field(type=int, doc="This is a typed mandatory field")
     ...
     >>> o = Foo()
-    >>> o.foo   # read access with default value
+    >>> o.od   # read access with default value
     'bar'
-    >>> o.foo2  # read access with default value factory
+    >>> o.odf  # read access with default value factory
     []
-    >>> o.foo2 = 12  # write access
-    >>> o.foo2
+    >>> o.odf = 12  # write access
+    >>> o.odf
     12
-    >>> o.foo3  # read access for mandatory attr without init
+    >>> o.m  # read access for mandatory attr without init
     Traceback (most recent call last):
         ...
-    mixture.core.MandatoryFieldInitError: Mandatory field 'foo3' was not set before first access on object...
-    >>> o.foo3 = True
-    >>> o.foo3  # read access for mandatory attr after init
+    mixture.core.MandatoryFieldInitError: Mandatory field 'm' was not set before first access on object...
+    >>> o.m = True
+    >>> o.m  # read access for mandatory attr after init
     True
-    >>> del o.foo3  # all attributes can be deleted, same behaviour than new object
-    >>> o.foo3
+    >>> del o.m  # all attributes can be deleted, same behaviour than new object
+    >>> o.m
     Traceback (most recent call last):
         ...
-    mixture.core.MandatoryFieldInitError: Mandatory field 'foo3' was not set before first access on object...
+    mixture.core.MandatoryFieldInitError: Mandatory field 'm' was not set before first access on object...
+    >>> o.mt = 1
 
     Limitations
     -----------
@@ -445,8 +447,7 @@ class DescriptorField(object):
         # name
         if not PY36 and name is None:
             raise ValueError("`name` is mandatory in python < 3.6")
-        if name is not None:
-            self.name = "_" + name
+        self.name = ("_" + name) if name is not None else None
 
         # doc
         self.doc = dedent(doc) if doc is not None else None

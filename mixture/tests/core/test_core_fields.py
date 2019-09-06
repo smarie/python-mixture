@@ -46,6 +46,8 @@ def test_field(read_first, type_):
 
 
 def test_type():
+    """ Tests that when `type` is provided, it works as expected """
+
     class Foo(object):
         f = field(name='f', type=str)
 
