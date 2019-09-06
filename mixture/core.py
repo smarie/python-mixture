@@ -506,3 +506,6 @@ class DescriptorField(object):
 
         # set the new value
         setattr(obj, self.name, value)
+
+    def __delete__(self, obj):
+        delattr(obj, self.name)
