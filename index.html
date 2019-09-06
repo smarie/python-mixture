@@ -345,6 +345,18 @@
 
 
   <li class="md-nav__item">
+    <a href="fields/" title="Fields documentation" class="md-nav__link">
+      Fields documentation
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="api_reference/" title="API reference" class="md-nav__link">
       API reference
     </a>
@@ -536,7 +548,7 @@
 </pre></div>
 
 
-<p>See <a href="api_reference/">API documentation</a> for details on <code>field</code>.</p>
+<p>See <a href="fields/"><code>field</code> documentation</a> for details.</p>
 <div class="admonition success">
 <p class="admonition-title">No performance overhead</p>
 <p>For those of the readers who have recognized it: <code>field</code> returns a <a href="https://docs.python.org/3.7/howto/descriptor.html">"non-data" python descriptor</a>. So the first time the attribute is read, a small python method call extra cost is paid. <em>But</em> afterwards the attribute is replaced with a native attribute inside the object <code>__dict__</code>, so subsequent calls use native access without overhead. This was inspired by <a href="https://tedboy.github.io/flask/generated/generated/werkzeug.cached_property.html">werkzeug's @cached_property</a>.</p>
@@ -621,13 +633,13 @@
       <nav class="md-footer-nav__inner md-grid">
         
         
-          <a href="api_reference/" title="API reference" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="fields/" title="Fields documentation" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                API reference
+                Fields documentation
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">

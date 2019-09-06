@@ -235,7 +235,7 @@ function filter_table(elem) {
 }
 </script>
     <h1>report.html</h1>
-    <p>Report generated on 05-Sep-2019 at 16:46:00 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a> v1.22.0</p>
+    <p>Report generated on 06-Sep-2019 at 12:07:02 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a> v1.22.0</p>
     <h2>Environment</h2>
     <table id="environment">
       <tr>
@@ -246,40 +246,43 @@ function filter_table(elem) {
         <td>/usr/local/lib/jvm/openjdk11</td></tr>
       <tr>
         <td>Packages</td>
-        <td>{&apos;pluggy&apos;: &apos;0.12.0&apos;, &apos;pytest&apos;: &apos;5.1.2&apos;, &apos;py&apos;: &apos;1.7.0&apos;}</td></tr>
+        <td>{&apos;pluggy&apos;: &apos;0.12.0&apos;, &apos;py&apos;: &apos;1.7.0&apos;, &apos;pytest&apos;: &apos;5.1.2&apos;}</td></tr>
       <tr>
         <td>Platform</td>
         <td>Linux-4.15.0-1028-gcp-x86_64-with-debian-stretch-sid</td></tr>
       <tr>
         <td>Plugins</td>
-        <td>{&apos;metadata&apos;: &apos;1.8.0&apos;, &apos;cov&apos;: &apos;2.6.0&apos;, &apos;html&apos;: &apos;1.22.0&apos;}</td></tr>
+        <td>{&apos;html&apos;: &apos;1.22.0&apos;, &apos;metadata&apos;: &apos;1.8.0&apos;, &apos;cov&apos;: &apos;2.6.0&apos;}</td></tr>
       <tr>
         <td>Python</td>
         <td>3.5.6</td></tr>
       <tr>
         <td>TRAVIS_BRANCH</td>
-        <td>0.1.0</td></tr>
+        <td>master</td></tr>
       <tr>
         <td>TRAVIS_BUILD_ID</td>
-        <td>581300646</td></tr>
+        <td>581644595</td></tr>
       <tr>
         <td>TRAVIS_BUILD_NUMBER</td>
-        <td>10</td></tr>
+        <td>11</td></tr>
       <tr>
         <td>TRAVIS_COMMIT</td>
-        <td>39e18ed85474ffbd03217e10586e1eb60350ec4e</td></tr>
+        <td>b6e5b2f5c1b6645962d1a2d83e04238b09cc3a95</td></tr>
       <tr>
         <td>TRAVIS_COMMIT_MESSAGE</td>
-        <td>0.1.0 changelog</td></tr>
+        <td>Tests for `field` are now independent</td></tr>
+      <tr>
+        <td>TRAVIS_COMMIT_RANGE</td>
+        <td>39e18ed85474...b6e5b2f5c1b6</td></tr>
       <tr>
         <td>TRAVIS_EVENT_TYPE</td>
         <td>push</td></tr>
       <tr>
         <td>TRAVIS_JOB_ID</td>
-        <td>581300648</td></tr>
+        <td>581644597</td></tr>
       <tr>
         <td>TRAVIS_JOB_NUMBER</td>
-        <td>10.2</td></tr>
+        <td>11.2</td></tr>
       <tr>
         <td>TRAVIS_OS_NAME</td>
         <td>linux</td></tr>
@@ -291,12 +294,9 @@ function filter_table(elem) {
         <td>smarie/python-mixture</td></tr>
       <tr>
         <td>TRAVIS_SUDO</td>
-        <td>true</td></tr>
-      <tr>
-        <td>TRAVIS_TAG</td>
-        <td>0.1.0</td></tr></table>
+        <td>true</td></tr></table>
     <h2>Summary</h2>
-    <p>11 tests ran in 0.24 seconds. </p>
+    <p>11 tests ran in 0.28 seconds. </p>
     <p class="filter" hidden="true">(Un)check the boxes to filter the results.</p><input checked="true" class="filter" data-test-result="passed" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="passed">11 passed</span>, <input checked="true" class="filter" data-test-result="skipped" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="skipped">2 skipped</span>, <input checked="true" class="filter" data-test-result="failed" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="failed">0 failed</span>, <input checked="true" class="filter" data-test-result="error" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="error">0 errors</span>, <input checked="true" class="filter" data-test-result="xfailed" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="xfailed">0 expected failures</span>, <input checked="true" class="filter" data-test-result="xpassed" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
     <h2>Results</h2>
     <table id="results-table">
@@ -320,25 +320,16 @@ function filter_table(elem) {
       <tbody class="skipped results-table-row">
         <tr>
           <td class="col-result">Skipped</td>
-          <td class="col-name">mixture/tests/core/test_core.py::test_apply_mixins[oldstyle=True]</td>
+          <td class="col-name">mixture/tests/core/test_core_apply.py::test_apply_mixins[oldstyle=True]</td>
           <td class="col-duration">0.00</td>
           <td class="col-links"></td></tr>
         <tr>
           <td class="extra" colspan="4">
-            <div class="log">(&#x27;/home/travis/build/smarie/python-mixture/mixture/tests/core/test_core.py&#x27;, 38, &#x27;Skipped: it is not possible to create an old style class with python 3+&#x27;)<br/></div></td></tr></tbody>
+            <div class="log">(&#x27;/home/travis/build/smarie/python-mixture/mixture/tests/core/test_core_apply.py&#x27;, 38, &#x27;Skipped: it is not possible to create an old style class with python 3+&#x27;)<br/></div></td></tr></tbody>
       <tbody class="passed results-table-row">
         <tr>
           <td class="col-result">Passed</td>
-          <td class="col-name">mixture/tests/core/test_core.py::test_apply_mixins[oldstyle=False]</td>
-          <td class="col-duration">0.00</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="empty log">No log output captured.</div></td></tr></tbody>
-      <tbody class="passed results-table-row">
-        <tr>
-          <td class="col-result">Passed</td>
-          <td class="col-name">mixture/tests/core/test_core.py::test_apply_mixins_warning_none</td>
+          <td class="col-name">mixture/tests/core/test_core_apply.py::test_apply_mixins[oldstyle=False]</td>
           <td class="col-duration">0.00</td>
           <td class="col-links"></td></tr>
         <tr>
@@ -347,7 +338,7 @@ function filter_table(elem) {
       <tbody class="passed results-table-row">
         <tr>
           <td class="col-result">Passed</td>
-          <td class="col-name">mixture/tests/core/test_core.py::test_apply_mixins_warning_init</td>
+          <td class="col-name">mixture/tests/core/test_core_apply.py::test_apply_mixins_warning_none</td>
           <td class="col-duration">0.00</td>
           <td class="col-links"></td></tr>
         <tr>
@@ -356,7 +347,7 @@ function filter_table(elem) {
       <tbody class="passed results-table-row">
         <tr>
           <td class="col-result">Passed</td>
-          <td class="col-name">mixture/tests/core/test_core.py::test_field[type_=default_factory-read_first=False]</td>
+          <td class="col-name">mixture/tests/core/test_core_apply.py::test_apply_mixins_warning_init</td>
           <td class="col-duration">0.00</td>
           <td class="col-links"></td></tr>
         <tr>
@@ -365,7 +356,7 @@ function filter_table(elem) {
       <tbody class="passed results-table-row">
         <tr>
           <td class="col-result">Passed</td>
-          <td class="col-name">mixture/tests/core/test_core.py::test_field[type_=default_factory-read_first=True]</td>
+          <td class="col-name">mixture/tests/core/test_core_fields.py::test_field[type_=default_factory-read_first=False]</td>
           <td class="col-duration">0.00</td>
           <td class="col-links"></td></tr>
         <tr>
@@ -374,7 +365,7 @@ function filter_table(elem) {
       <tbody class="passed results-table-row">
         <tr>
           <td class="col-result">Passed</td>
-          <td class="col-name">mixture/tests/core/test_core.py::test_field[type_=default-read_first=False]</td>
+          <td class="col-name">mixture/tests/core/test_core_fields.py::test_field[type_=default_factory-read_first=True]</td>
           <td class="col-duration">0.00</td>
           <td class="col-links"></td></tr>
         <tr>
@@ -383,7 +374,7 @@ function filter_table(elem) {
       <tbody class="passed results-table-row">
         <tr>
           <td class="col-result">Passed</td>
-          <td class="col-name">mixture/tests/core/test_core.py::test_field[type_=default-read_first=True]</td>
+          <td class="col-name">mixture/tests/core/test_core_fields.py::test_field[type_=default-read_first=False]</td>
           <td class="col-duration">0.00</td>
           <td class="col-links"></td></tr>
         <tr>
@@ -392,7 +383,7 @@ function filter_table(elem) {
       <tbody class="passed results-table-row">
         <tr>
           <td class="col-result">Passed</td>
-          <td class="col-name">mixture/tests/core/test_core.py::test_field[type_=mandatory-read_first=False]</td>
+          <td class="col-name">mixture/tests/core/test_core_fields.py::test_field[type_=default-read_first=True]</td>
           <td class="col-duration">0.00</td>
           <td class="col-links"></td></tr>
         <tr>
@@ -401,7 +392,16 @@ function filter_table(elem) {
       <tbody class="passed results-table-row">
         <tr>
           <td class="col-result">Passed</td>
-          <td class="col-name">mixture/tests/core/test_core.py::test_field[type_=mandatory-read_first=True]</td>
+          <td class="col-name">mixture/tests/core/test_core_fields.py::test_field[type_=mandatory-read_first=False]</td>
+          <td class="col-duration">0.00</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">mixture/tests/core/test_core_fields.py::test_field[type_=mandatory-read_first=True]</td>
           <td class="col-duration">0.00</td>
           <td class="col-links"></td></tr>
         <tr>
