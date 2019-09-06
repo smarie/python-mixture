@@ -281,7 +281,7 @@ def field(type=MISSING_TYPE,        # type: Type[T]
 
     Limitations
     -----------
-    The class has to have a `__dict__` in order for this property to work, so classes with `__slots__` are not supported.
+    Old-style classes are not supported: in python 2, don't forget to inherit from `object`.
 
     Performance overhead
     --------------------

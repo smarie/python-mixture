@@ -46,7 +46,7 @@ def test_field(read_first, type_):
 
 
 def test_type():
-    class Foo:
+    class Foo(object):
         f = field(name='f', type=str)
 
     o = Foo()
