@@ -277,6 +277,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#020-field-improvements" class="md-nav__link">
+    0.2.0 - field improvements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#010-first-public-version" class="md-nav__link">
     0.1.0 - First public version
   </a>
@@ -315,6 +322,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#020-field-improvements" class="md-nav__link">
+    0.2.0 - field improvements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#010-first-public-version" class="md-nav__link">
     0.1.0 - First public version
   </a>
@@ -341,6 +355,15 @@
                 
                 
                 <h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
+<h3 id="020-field-improvements">0.2.0 - <code>field</code> improvements<a class="headerlink" href="#020-field-improvements" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p>New <code>type</code> argument in <code>field</code> to declare the type of a field. If provided, the descriptor will <em>not</em> be replaced with a native field, and the type will be checked on every value modification. A <code>TypeError</code> will be raised if type does not comply. Type hints are correctly defined so that IDEs can pick them. Fixes <a href="https://github.com/smarie/python-mixture/issues/3">#3</a></p>
+</li>
+<li>
+<p>New <code>use_descriptor</code> argument in <code>field</code> to force use a descriptor instead of a native field.</p>
+</li>
+</ul>
 <h3 id="010-first-public-version">0.1.0 - First public version<a class="headerlink" href="#010-first-public-version" title="Permanent link">&para;</a></h3>
 <p><strong>Mix-in basics</strong>:</p>
 <ul>

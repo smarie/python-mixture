@@ -382,6 +382,9 @@ until it is first read or written.</p>
 This value will not be copied but used "as is" on all instances, following python's classical pattern for default 
 values. If you wish to run specific code to instantiate the default value, you may provide a <code>default_factory</code>
 callable instead. That callable should have no mandatory argument and should return the default value. </p>
+<p><strong>Typing</strong></p>
+<p>Type hints for fields can be provided using the standard python typing mechanisms (type comments for python &lt; 3.6  and class member type hints for python &gt;= 3.6). Types declared this way will not be checked at runtime, they are just hints for the IDE.</p>
+<p>Instead, you can specify a <code>type</code> to declare that type should be checked. In that case the type will be validated everytime a new value is provided, and a <code>TypeError</code> will be raised if invalid. The corresponding type hint is automatically declared by <code>field</code> so your IDE will know about it, no need to use additional type hints.</p>
 <p><strong>Documentation</strong></p>
 <p>A docstring can be provided for code readability.</p>
 <p><strong>Example</strong></p>
@@ -415,9 +418,10 @@ callable instead. That callable should have no mandatory argument and should ret
 
 
 <p><strong>Limitations</strong></p>
-<p>The class has to have a <code>__dict__</code> in order for this property to work, so classes with <code>__slots__</code> are not  supported.</p>
+<p>Old-style classes are not supported: in python 2, don't forget to inherit from <code>object</code>.</p>
 <p><strong>Performance overhead</strong></p>
-<p>The <code>Field</code> class implements the "non-data" descriptor protocol. So the first time the attribute is read, a small  python method call extra cost is paid. <em>But</em> afterwards the attribute is replaced with a native attribute inside the object <code>__dict__</code>, so subsequent calls use native access without overhead. 
+<p><code>field</code> has two different ways to create your fields. One named <code>NativeField</code> is faster but does not permit type checking, validation, or converters; besides it does not work with classes using <code>__slots__</code>. It is used by default everytime where it is possible, except if you use one of the abovementioned features. In that case a <code>DescriptorField</code> will transparently be created. You can force a <code>DescriptorField</code> to be created by setting <code>use_descriptor=True</code>.</p>
+<p>The <code>NativeField</code> class implements the "non-data" descriptor protocol. So the first time the attribute is read, a small  python method call extra cost is paid. <em>But</em> afterwards the attribute is replaced with a native attribute inside the object <code>__dict__</code>, so subsequent calls use native access without overhead. 
 This was inspired by <a href="https://tedboy.github.io/flask/generated/generated/werkzeug.cached_property.html">werkzeug's @cached_property</a>. </p>
 <p><strong>Inspired by</strong></p>
 <p>This method was inspired by </p>
@@ -429,10 +433,12 @@ This was inspired by <a href="https://tedboy.github.io/flask/generated/generated
 </ul>
 <p><strong>Parameters</strong></p>
 <ul>
+<li><code>type</code>: an optional type for the field. If one is provided, the field will not be a simple (fast) field any more but will be a descriptor (slower) field.</li>
 <li><code>default</code>: a default value for the field. Providing a <code>default</code> makes the field "optional". <code>default</code> value is not copied on new instances, if you wish a new copy to be created you should provide a <code>default_factory</code> instead. Only one of <code>default</code> or <code>default_factory</code> should be provided.</li>
 <li><code>default_factory</code>: a factory that will be called (without arguments) to get the default value for that field, everytime one is needed. Providing a <code>default_factory</code> makes the field "optional". Only one of <code>default</code> or <code>default_factory</code> should be provided.</li>
 <li><code>doc</code>: documentation for the field. This is mostly for class readability purposes for now.</li>
 <li><code>name</code>: in python &lt; 3.6 this is mandatory, and should be the same name than the one used used in the class definition (typically, <code>class Foo:    &lt;name&gt; = field(name=&lt;name&gt;)</code>).</li>
+<li><code>use_descriptor</code>: a boolean (default: <code>False</code>) that can be turned to <code>True</code> to force a field to be a descriptor field. This is mandatory for classes that do not have <code>__dict__</code> (so, classes with <code>__slots__</code>)</li>
 </ul>
                 
                   
