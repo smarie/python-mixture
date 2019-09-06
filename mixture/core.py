@@ -6,9 +6,11 @@ from textwrap import dedent
 from warnings import warn
 
 try:  # python 3.5+
-    from typing import Optional, Set, List, Callable, Dict
+    from typing import Optional, Set, List, Callable, Dict, Type, Any, TypeVar
+    T = TypeVar('T')
+    MISSING_TYPE = Any
 except ImportError:
-    pass
+    MISSING_TYPE = object
 
 
 FROM_MIXINS_TAG = '__from_mixins__'
@@ -205,7 +207,14 @@ class MandatoryFieldInitError(Exception):
 PY36 = sys.version_info >= (3, 6)
 
 
-def field(default=MISSING, default_factory=MISSING, doc=None, name=None):
+def field(type=MISSING_TYPE,        # type: Type[T]
+          default=MISSING,          # type: T
+          default_factory=MISSING,  # type: Callable[[], T]
+          doc=None,                 # type: str
+          name=None,                # type: str
+          use_descriptor=False      # type: bool
+          ):
+    # type: (...) -> T
     """
     Returns a class-level attribute definition. It allows developers to define an attribute without writing an
     `__init__` method. Typically useful for mixin classes.
@@ -222,6 +231,16 @@ def field(default=MISSING, default_factory=MISSING, doc=None, name=None):
     This value will not be copied but used "as is" on all instances, following python's classical pattern for default
     values. If you wish to run specific code to instantiate the default value, you may provide a `default_factory`
     callable instead. That callable should have no mandatory argument and should return the default value.
+
+    Typing
+    ------
+    Type hints for fields can be provided using the standard python typing mechanisms (type comments for python < 3.6
+    and class member type hints for python >= 3.6). Types declared this way will not be checked at runtime, they are
+    just hints for the IDE.
+
+    Instead, you can specify a `type` to declare that type should be checked. In that case the type will be validated
+    everytime a new value is provided, and a `TypeError` will be raised if invalid. The corresponding type hint is
+    automatically declared by `field` so your IDE will know about it, no need to use additional type hints.
 
     Documentation
     -------------
@@ -266,8 +285,14 @@ def field(default=MISSING, default_factory=MISSING, doc=None, name=None):
 
     Performance overhead
     --------------------
-    The `Field` class implements the "non-data" descriptor protocol. So the first time the attribute is read, a small
-    python method call extra cost is paid. *But* afterwards the attribute is replaced with a native attribute
+    `field` has two different ways to create your fields. One named `NativeField` is faster but does not permit type
+    checking, validation, or converters; besides it does not work with classes using `__slots__`. It is used by default
+    everytime where it is possible, except if you use one of the abovementioned features. In that case a
+    `DescriptorField` will transparently be created. You can force a `DescriptorField` to be created by setting
+    `use_descriptor=True`.
+
+    The `NativeField` class implements the "non-data" descriptor protocol. So the first time the attribute is read, a
+    small python method call extra cost is paid. *But* afterwards the attribute is replaced with a native attribute
     inside the object `__dict__`, so subsequent calls use native access without overhead.
     This was inspired by
     [werkzeug's @cached_property](https://tedboy.github.io/flask/generated/generated/werkzeug.cached_property.html).
@@ -283,6 +308,8 @@ def field(default=MISSING, default_factory=MISSING, doc=None, name=None):
             In python < 3.6 the `name` attribute is mandatory and should be the same name than the one used used in the
         class field definition (i.e. you should define the field as '<name> = field(name=<name>)').
 
+    :param type: an optional type for the field. If one is provided, the field will not be a simple (fast) field any
+        more but will be a descriptor (slower) field.
     :param default: a default value for the field. Providing a `default` makes the field "optional". `default` value
         is not copied on new instances, if you wish a new copy to be created you should provide a `default_factory`
         instead. Only one of `default` or `default_factory` should be provided.
@@ -292,16 +319,35 @@ def field(default=MISSING, default_factory=MISSING, doc=None, name=None):
     :param doc: documentation for the field. This is mostly for class readability purposes for now.
     :param name: in python < 3.6 this is mandatory, and should be the same name than the one used used in the class
         definition (typically, `class Foo:    <name> = field(name=<name>)`).
+    :param use_descriptor: a boolean (default: `False`) that can be turned to `True` to force a field to be a
+        descriptor field. This is mandatory for classes that do not have `__dict__` (so, classes with `__slots__`)
     :return:
     """
-    return Field(default=default, default_factory=default_factory, doc=doc, name=name)
+    # check the conditions when we can not go with a fast native field
+    needs_descriptor = (type is not MISSING_TYPE) or use_descriptor
+
+    if needs_descriptor:
+        return DescriptorField(type=type, default=default, default_factory=default_factory, doc=doc, name=name)
+    else:
+        return NativeField(default=default, default_factory=default_factory, doc=doc, name=name)
 
 
-class Field(object):
+class NativeField(object):
+    """
+    Implements fields that are replaced with a native python one on first read or write access.
+    Faster but provides not much flexibility (no validator, no type check, no converter)
+    """
     __slots__ = ('default', 'is_factory', 'name', 'doc')
 
-    def __init__(self, default=MISSING, default_factory=MISSING, doc=None, name=None):
+    def __init__(self,
+                 default=MISSING,          # type: Any
+                 default_factory=MISSING,  # type: Callable[[], Any]
+                 doc=None,                 # type: str
+                 name=None                 # type: str
+                 ):
         """See help(field) for details"""
+
+        # default
         if default_factory is not MISSING:
             if default is not MISSING:
                 raise ValueError("Only one of `default` and `default_factory` should be provided")
@@ -312,40 +358,49 @@ class Field(object):
             self.default = default
             self.is_factory = False
 
+        # name
         if not PY36 and name is None:
             raise ValueError("`name` is mandatory in python < 3.6")
         self.name = name
+
+        # doc
         self.doc = dedent(doc) if doc is not None else None
 
     def __set_name__(self, owner, name):
         # called at class creation time
-        if self.name is not None and self.name != name:
-            raise ValueError("field name '%s' in class '%s' does not correspond to explicitly declared name '%s' in "
-                             "field constructor" % (name, owner.__class__, self.name))
-        self.name = name
+        if self.name is not None:
+            if self.name != name:
+                raise ValueError("field name '%s' in class '%s' does not correspond to explicitly declared name '%s' in "
+                                 "field constructor" % (name, owner.__class__, self.name))
+        else:
+            self.name = name
 
     def __get__(self, obj, objtype):
         if obj is None:
             # class-level call ?
             return self
 
-        if self.default is MISSING:
-            # mandatory
-            raise MandatoryFieldInitError(self.name, obj)
-
         # Check if the field is already set in the object __dict__
         value = obj.__dict__.get(self.name, _unset)
 
         if value is _unset:
-            # nominal case: we set the attribute in the object __dict__ on first read
-            # so that next reads will be pure native field access
+            # mandatory field: raise an error
+            if self.default is MISSING:
+                raise MandatoryFieldInitError(self.name, obj)
+
+            # optional: get default
             if self.is_factory:
                 value = self.default()
             else:
                 value = self.default
+
+            # nominal initialization on first read: we set the attribute in the object __dict__
+            # so that next reads will be pure native field access
             obj.__dict__[self.name] = value
+
         # else:
             # this was probably a manual call of __get__ (or a concurrent call of the first access)
+
         return value
 
     # not needed apparently
@@ -356,3 +411,98 @@ class Field(object):
     #         # silently ignore: the field has not been set on that object yet,
     #         # and we wont delete the class `field` anyway...
     #         pass
+
+
+class DescriptorField(object):
+    """
+    General-purpose implementation for fields that require type-checking or validation or converter
+    """
+    __slots__ = ('type', 'default', 'is_factory', 'name', 'doc')
+
+    def __init__(self,
+                 type=MISSING_TYPE,        # type: Type[T]
+                 default=MISSING,          # type: Any
+                 default_factory=MISSING,  # type: Callable[[], Any]
+                 doc=None,                 # type: str
+                 name=None                 # type: str
+                 ):
+        """See help(field) for details"""
+
+        # default
+        if default_factory is not MISSING:
+            if default is not MISSING:
+                raise ValueError("Only one of `default` and `default_factory` should be provided")
+            else:
+                self.default = default_factory
+                self.is_factory = True
+        else:
+            self.default = default
+            self.is_factory = False
+
+        # type
+        self.type = type
+
+        # name
+        if not PY36 and name is None:
+            raise ValueError("`name` is mandatory in python < 3.6")
+        if name is not None:
+            self.name = "_" + name
+
+        # doc
+        self.doc = dedent(doc) if doc is not None else None
+
+    def __set_name__(self, owner, name):
+        # called at class creation time
+        if self.name is not None:
+            if self.name[1:] != name:
+                raise ValueError("field name '%s' in class '%s' does not correspond to explicitly declared name '%s' in "
+                                 "field constructor" % (name, owner.__class__, self.name[1:]))
+        else:
+            self.name = "_" + name
+
+    def __get__(self, obj, objtype):
+        if obj is None:
+            # class-level call ?
+            return self
+
+        # Check if the field is already set in the object
+        value = getattr(obj, self.name, _unset)
+
+        if value is _unset:
+            # mandatory field: raise an error
+            if self.default is MISSING:
+                raise MandatoryFieldInitError(self.name, obj)
+
+            # optional: get default
+            if self.is_factory:
+                value = self.default()
+            else:
+                value = self.default
+
+            # nominal initialization on first read: we set the attribute in the object
+            setattr(obj, self.name, value)
+
+        return value
+
+    def __set__(self, obj, value):
+        # check the type
+        t = self.type
+        if t is not MISSING_TYPE:
+            if not isinstance(value, t):
+                # representing the object might fail, protect ourselves
+                try:
+                    val_repr = str(value)
+                except:
+                    try:
+                        val_repr = repr(value)
+                    except Exception as e:
+                        val_repr = "<error while trying to represent object: %s>" % e
+
+                raise TypeError("Invalid value type provided for '%s.%s'. "
+                                "Value should be of type '%s'. "
+                                "Instead, received a '%s': %s"
+                                % (obj.__class__.__name__, self.name[1:],
+                                   t.__name__, value.__class__.__name__, val_repr))
+
+        # set the new value
+        setattr(obj, self.name, value)

@@ -1,7 +1,8 @@
 #  Authors: Sylvain Marie <sylvain.marie@se.com>
 #
 #  Copyright (c) Schneider Electric Industries, 2019. All right reserved.
-import sys
+
+from collections import Iterable
 
 import pytest
 
@@ -42,3 +43,17 @@ def test_field(read_first, type_):
     # set
     t.afraid = True
     assert t.afraid
+
+
+def test_type():
+    class Foo:
+        f = field(name='f', type=str)
+
+    o = Foo()
+    o.f = 'hello'
+    with pytest.raises(TypeError) as exc_info:
+        o.f = 1
+
+    assert str(exc_info.value) == "Invalid value type provided for 'Foo.f'. " \
+                                  "Value should be of type 'str'. " \
+                                  "Instead, received a 'int': 1"
