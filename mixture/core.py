@@ -2,15 +2,31 @@
 #
 #  Copyright (c) Schneider Electric Industries, 2019. All right reserved.
 import sys
+from functools import partial
+from itertools import chain
 from textwrap import dedent
 from warnings import warn
 
-try:  # python 3.5+
-    from typing import Optional, Set, List, Callable, Dict, Type, Any, TypeVar
-    T = TypeVar('T')
-    MISSING_TYPE = Any
+from valid8 import AtLeastOneFailed
+from valid8.base import failure_raiser, result_is_success, get_callable_names
+
+try:
+    from inspect import getfullargspec
 except ImportError:
-    MISSING_TYPE = object
+    # python 2
+    from inspect import getargspec as getfullargspec
+
+import sentinel
+from valid8 import Validator, ValidationError, NonePolicy
+
+try:  # python 3.5+
+    from typing import Optional, Set, List, Callable, Dict, Type, Any, TypeVar, Union, Iterable, Tuple, Mapping
+    use_type_hints = True
+except ImportError:
+    use_type_hints = False
+
+
+PY36 = sys.version_info >= (3, 6)
 
 
 FROM_MIXINS_TAG = '__from_mixins__'
@@ -185,10 +201,6 @@ def copy_cls_vars(cls):
     return cls_vars
 
 
-MISSING = object()
-_unset = object()
-
-
 class MandatoryFieldInitError(Exception):
     """
     Raised by `field` when a mandatory field is read without being set first.
@@ -204,15 +216,49 @@ class MandatoryFieldInitError(Exception):
                "object '%s'." % (self.field_name, self.obj)
 
 
-PY36 = sys.version_info >= (3, 6)
+# a few symbols used in `fields`
+NO_DEFAULT = sentinel.create('NO_DEFAULT')
+_unset = sentinel.create('_unset')
+if use_type_hints:
+    T = TypeVar('T')
+    ANY_TYPE = Any
+    ValidationFunc = Union[Callable[[Any], Any],
+                           Callable[[Any, Any], Any],
+                           Callable[[Any, Any, Any], Any]
+                           ]
+    """A validation function is a callable with signature (val), (obj, val) or (obj, field, val), returning `True` 
+    or `None` in case of success"""
+
+    ValidatorDef = Union[ValidationFunc,
+                         Tuple[ValidationFunc, str],
+                         Tuple[ValidationFunc, Type[Exception]],
+                         Tuple[ValidationFunc, str, Type[Exception]]
+                     ]
+    """A validator is a validation function together with optional error message and error type"""
+
+    ValidatorDefinitionElement = Union[str, Type[Exception], ValidationFunc]
+    """One of the elements that can define a validator"""
+
+    Validators = Union[ValidatorDef, Iterable[ValidatorDef],
+                       Mapping[ValidatorDefinitionElement,
+                               Union[ValidatorDefinitionElement,
+                                     Tuple[ValidatorDefinitionElement, ...]
+                      ]]]
+    """Several validators can be provided as a singleton, iterable, or dict-like. In that case the value can be a 
+    single variable or a tuple, and it will be combined with the key to form the validator. So you can use any of the 
+    elements defining a validators as the key."""
+
+else:
+    ANY_TYPE = sentinel.create('ANY_TYPE')
 
 
-def field(type=MISSING_TYPE,        # type: Type[T]
-          default=MISSING,          # type: T
-          default_factory=MISSING,  # type: Callable[[], T]
-          doc=None,                 # type: str
-          name=None,                # type: str
-          use_descriptor=False      # type: bool
+def field(type=ANY_TYPE,         # type: Type[T]
+          default=NO_DEFAULT,    # type: T
+          default_factory=None,  # type: Callable[[], T]
+          validator=None,        # type: Validators
+          doc=None,              # type: str
+          name=None,             # type: str
+          use_descriptor=None    # type: bool
           ):
     # type: (...) -> T
     """
@@ -326,12 +372,30 @@ def field(type=MISSING_TYPE,        # type: Type[T]
     :return:
     """
     # check the conditions when we can not go with a fast native field
-    needs_descriptor = (type is not MISSING_TYPE) or use_descriptor
+    if use_descriptor is not None and not use_descriptor:
+        # explicit `use_descriptor=False`
+        if validator is not None:
+            raise UnsupportedOnNativeFieldError("`use_descriptor=False` can not be set if a `validator` or `converter` is "
+                                            "provided")
+        else:
+            # IMPORTANT: `type *can* still be provided but will not be validated`
+            needs_descriptor = False
+    else:
+        needs_descriptor = (type is not ANY_TYPE) or (validator is not None) or use_descriptor
 
+    # finally create the correct descriptor type
     if needs_descriptor:
-        return DescriptorField(type=type, default=default, default_factory=default_factory, doc=doc, name=name)
+        return DescriptorField(type=type, default=default, default_factory=default_factory, validator=validator,
+                               doc=doc, name=name)
     else:
         return NativeField(default=default, default_factory=default_factory, doc=doc, name=name)
+
+
+class UnsupportedOnNativeFieldError(Exception):
+    """
+    Exception raised whenever someone tries to perform an operation that is not supported on a "native" field.
+    """
+    pass
 
 
 class NativeField(object):
@@ -342,16 +406,16 @@ class NativeField(object):
     __slots__ = ('default', 'is_factory', 'name', 'doc')
 
     def __init__(self,
-                 default=MISSING,          # type: Any
-                 default_factory=MISSING,  # type: Callable[[], Any]
-                 doc=None,                 # type: str
-                 name=None                 # type: str
+                 default=NO_DEFAULT,    # type: Any
+                 default_factory=None,  # type: Callable[[], Any]
+                 doc=None,              # type: str
+                 name=None              # type: str
                  ):
         """See help(field) for details"""
 
         # default
-        if default_factory is not MISSING:
-            if default is not MISSING:
+        if default_factory is not None:
+            if default is not NO_DEFAULT:
                 raise ValueError("Only one of `default` and `default_factory` should be provided")
             else:
                 self.default = default_factory
@@ -387,7 +451,7 @@ class NativeField(object):
 
         if value is _unset:
             # mandatory field: raise an error
-            if self.default is MISSING:
+            if self.default is NO_DEFAULT:
                 raise MandatoryFieldInitError(self.name, obj)
 
             # optional: get default
@@ -414,35 +478,43 @@ class NativeField(object):
     #         # and we wont delete the class `field` anyway...
     #         pass
 
+    def validator(self):
+        raise UnsupportedOnNativeFieldError("defining validators is not supported on native fields. Please set "
+                                        "`use_descriptor=True` on field '%s' to enable this feature." % (self.name,))
+
 
 class DescriptorField(object):
     """
     General-purpose implementation for fields that require type-checking or validation or converter
     """
-    __slots__ = ('type', 'default', 'is_factory', 'name', 'doc')
+    __slots__ = ('type', 'default', 'is_default_factory', 'validators', 'name', 'doc')
 
     def __init__(self,
-                 type=MISSING_TYPE,        # type: Type[T]
-                 default=MISSING,          # type: Any
-                 default_factory=MISSING,  # type: Callable[[], Any]
-                 doc=None,                 # type: str
-                 name=None                 # type: str
+                 type=ANY_TYPE,         # type: Type[T]
+                 default=NO_DEFAULT,    # type: Any
+                 default_factory=None,  # type: Callable[[], Any]
+                 validator=None,        # type: Validators
+                 doc=None,              # type: str
+                 name=None              # type: str
                  ):
         """See help(field) for details"""
 
         # default
-        if default_factory is not MISSING:
-            if default is not MISSING:
+        if default_factory is not None:
+            if default is not NO_DEFAULT:
                 raise ValueError("Only one of `default` and `default_factory` should be provided")
             else:
                 self.default = default_factory
-                self.is_factory = True
+                self.is_default_factory = True
         else:
             self.default = default
-            self.is_factory = False
+            self.is_default_factory = False
 
         # type
         self.type = type
+
+        # validator
+        self.validators = make_validators(validator)
 
         # name
         if not PY36 and name is None:
@@ -471,11 +543,11 @@ class DescriptorField(object):
 
         if value is _unset:
             # mandatory field: raise an error
-            if self.default is MISSING:
+            if self.default is NO_DEFAULT:
                 raise MandatoryFieldInitError(self.name, obj)
 
             # optional: get default
-            if self.is_factory:
+            if self.is_default_factory:
                 value = self.default()
             else:
                 value = self.default
@@ -486,9 +558,12 @@ class DescriptorField(object):
         return value
 
     def __set__(self, obj, value):
-        # check the type
+        # speedup for vars used several time
         t = self.type
-        if t is not MISSING_TYPE:
+        private_attr_name = self.name
+
+        # check the type
+        if t is not ANY_TYPE:
             if not isinstance(value, t):
                 # representing the object might fail, protect ourselves
                 try:
@@ -502,11 +577,253 @@ class DescriptorField(object):
                 raise TypeError("Invalid value type provided for '%s.%s'. "
                                 "Value should be of type '%s'. "
                                 "Instead, received a '%s': %s"
-                                % (obj.__class__.__name__, self.name[1:],
+                                % (obj.__class__.__name__, private_attr_name[1:],
                                    t.__name__, value.__class__.__name__, val_repr))
 
+        # run the validators
+        if self.validators is not None:
+            self.validators.validate(obj, self, value)
+
         # set the new value
-        setattr(obj, self.name, value)
+        setattr(obj, private_attr_name, value)
 
     def __delete__(self, obj):
         delattr(obj, self.name)
+
+
+class FieldValidator(Validator):
+    """
+    Extends valid8's Validator to handle the extra (obj, field) context arguments provided on validation
+    """
+    def __init__(self, *all_validators):
+        # dont call super
+        # super(FieldValidator, self).__init__(error_type=None, help_msg=None, none_policy=None)
+        self.error_type = ValidationError
+        self.help_msg = None
+        self.none_policy = NonePolicy.VALIDATE
+        self.kw_context_args = dict()
+
+        # set main function to be an "and" of all functions
+        self.main_function = and_with_additional_args(*all_validators)
+
+    def validate(self, obj, field, value):
+        # first set the validation context to (obj, field)
+        main_function_bak = self.main_function
+
+        # create a partial dynamically
+        self.main_function = partialize(main_function_bak, obj, field)
+
+        # then call validation
+        try:
+            self.assert_valid(field.name[1:], value)
+        finally:
+            # put back the main function
+            self.main_function = main_function_bak
+
+
+def partialize(f, *args):
+    fp = partial(f, *args)
+    fp.__name__ = f.__name__
+    return fp
+
+
+def and_with_additional_args(*all_validators):
+    """similar to valid8.and_(*validators) but here our validators have context"""
+
+    if len(all_validators) == 1:
+        return all_validators[0]
+    else:
+        def and_v_(obj, field, x):
+            for validator in all_validators:
+                try:
+                    res = validator(obj, field, x)
+                except Exception as e:
+                    # one validator was unhappy > raise
+                    partials = [partialize(v, obj, field) for v in all_validators]
+                    raise AtLeastOneFailed(partials, x, cause=e)
+                # if not result_is_success(res): <= DO NOT REMOVE THIS COMMENT
+                if (res is not None) or (res is not True):
+                    # one validator was unhappy > raise
+                    partials = [partialize(v, obj, field) for v in all_validators]
+                    raise AtLeastOneFailed(partials, x)
+
+            return True
+
+        and_v_.__name__ = 'and({})'.format(get_callable_names(all_validators))
+        return and_v_
+
+
+def make_validators(validators  # type: Validators
+                    ):
+    """
+    Converts the provided validators into the structures that will be used internally for validation.
+
+     - `validators` should either be `None`, a single `Validator`, an iterable of `Validator`s, or a dictionary of
+       validators (in which case many syntaxes are allowed, see below). See `Validators` type hint.
+
+     - A `Validator` is a validation function together with optional error messages and optional error types. See
+       `make_validator(validator)` for details.
+
+    TODO Dict syntax
+
+    :param validators: `None`, a single validator, an iterable of validators, or a dict-like of validators
+    :return: a list of validators or `None`
+    """
+    if validators is not None:
+        try:
+            # mapping ?
+            v_items = validators.items()
+        except AttributeError as e:
+            try:
+                # iterable ?
+                v_iter = iter(validators)
+            except TypeError as e:
+                # single validator
+                all_validators = (make_validator(validators), )
+            else:
+                # iterable
+                all_validators = (make_validator(v) for v in v_iter)
+        else:
+            # mapping
+            def _mapping_entry_to_validator(k, v):
+                try:
+                    # tuple?
+                    len(v)
+                except TypeError:
+                    # single value
+                    vals = (k, v)
+                else:
+                    # tuple: chain with key
+                    vals = chain((k, ), v)
+
+                # find the various elements from the key and value
+                callabl, err_msg, err_type = None, None, None
+                for _elt in vals:
+                    if isinstance(_elt, str):
+                        err_msg = _elt
+                    else:
+                        try:
+                            if issubclass(_elt, Exception):
+                                err_type = _elt
+                            else:
+                                callabl = _elt
+                        except TypeError:
+                            callabl = _elt
+
+                return make_validator((callabl, err_msg, err_type))
+
+            all_validators = (_mapping_entry_to_validator(k, v) for k, v in v_items)
+
+        # finally create the validator
+        return FieldValidator(*all_validators)
+
+
+def make_validator(validator  # type: ValidatorDef
+                   ):
+    """
+     Converts the provided validator into the structures that will be used internally for validation.
+
+     - `validator` is a validation function together with optional error messages and optional error types. It can
+       therefore be provided as <validation_func>, as (<validation_func>, <err_msg>),
+       (<validation_func>, <err_type>), or (<validation_func>, <err_msg>, <err_type>). See `Validator` type hint.
+
+     - Finally a `<validation_func>` validation function is a `callable` with one, two or three arguments: its
+       signature should be `f(val)`, `f(obj, val)` or `f(obj, field, val)`. It should return `True` or `None` in case
+       of success. See `ValidationFunc` type hint.
+
+    :param validator:
+    :return:
+    """
+    validation_func, help_msg, err_type = None, None, None
+    try:
+        nb_elts = len(validator)
+    except TypeError:
+        validation_func = validator
+    else:
+        # a tuple
+        if nb_elts == 1:
+            validation_func = validator[0]
+        elif nb_elts == 2:
+            if isinstance(validator[1], str):
+                validation_func, help_msg, err_type = validator[0], validator[1], None
+            else:
+                validation_func, help_msg, err_type = validator[0], None, validator[1]
+        elif nb_elts == 3:
+            validation_func, help_msg, err_type = validator[:]
+        else:
+            raise ValueError('tuple in validator definition should have length 1, 2, or 3. Found: %s' % validator)
+
+    # support several cases for the validation function signature
+    # `f(val)`, `f(obj, val)` or `f(obj, field, val)`
+    nb_args = len(getfullargspec(validation_func)[0])
+    if nb_args == 0:
+        raise ValueError("validation function should accept 1, 2, or 3 arguments at least. `f(val)`, `f(obj, val)` or "
+                         "`f(obj, field, val)`")
+    elif nb_args == 1:
+        # underlying validator from valid8 handling the error-related part
+        raiser = failure_raiser(validation_func, help_msg=help_msg, failure_type=err_type)
+
+        # function that we'll call
+        def validate(obj, field, val):
+            raiser(val)
+
+    else:
+        # the validation function has two or three (or more but optional) arguments.
+        # valid8 requires only 1. Reconciliate the two using context managers
+        class val_func_with_2_args:
+            """ Represents a function """
+            __slots__ = 'obj', 'f'
+
+            def __init__(self, f):
+                self.f = f
+
+            def work_on(self, obj):
+                self.obj = obj
+                return self
+
+            def __enter__(self):
+                pass
+
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                self.obj = None
+
+            def __call__(self, val):
+                # call user-provided validation function f
+                return self.f(self.obj, val)
+
+        if nb_args == 2:
+            checker = val_func_with_2_args(validation_func)
+
+            # underlying validator from valid8 handling the error-related part
+            raiser = failure_raiser(checker, help_msg=help_msg, failure_type=err_type)
+
+            # final validation function
+            def validate(obj, field, val):
+                with checker.work_on(obj):
+                    raiser(val)
+
+        elif nb_args >= 3:
+            class val_func_with_3_args(val_func_with_2_args):
+                __slots__ = 'field'
+
+                def work_on(self, obj, field):
+                    self.obj = obj
+                    self.field = field
+                    return self
+
+                def __call__(self, val):
+                    return self.f(self.obj, self.field, val)
+
+            checker = val_func_with_3_args(validation_func)
+
+            # underlying validator from valid8 handling the error-related part
+            raiser = failure_raiser(checker, help_msg=help_msg, failure_type=err_type)
+
+            # final validation function
+            def validate(obj, field, val):
+                with checker.work_on(obj, field):
+                    raiser(val)
+
+    # pycharm does not see it but yes all cases are covered
+    validate.__name__ = validation_func.__name__
+    return validate
