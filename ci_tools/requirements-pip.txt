@@ -1,5 +1,4 @@
 # --- to execute setup.py whatever the goal
-pypandoc
 pytest-runner
 setuptools_scm
 six
@@ -9,7 +8,7 @@ pytest>=4.4  #$PYTEST_VERSION
 pytest-logging  # ==2015.11.4
 
 # --- to generate the reports (see scripts in ci_tools, called by .travis)
-pytest-cov==2.6.0  # after 2.6.1 it requires pytest 3.6
+# pytest-cov==2.6.0  # after 2.6.1 it requires pytest 3.6
 pytest-html==1.9.0  # otherwise requires pytest 5
 xunitparser
 
