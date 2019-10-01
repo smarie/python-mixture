@@ -8,9 +8,10 @@
 
 Creating [mixin classes](https://en.wikipedia.org/wiki/Mixin) is a quite elegant way to design reusable object-oriented code in python. Doing it right might be tricky as python provides many alternate ways. This library provides
 
- - a minimal `field` implementation enabling developers to create mixin classes without having to define `__init__` methods (thus avoiding the multiparent initialization hell) 
  - an `@apply_mixins` decorator for those users wishing to avoid inheritance *at all* when mixing classes
- - (TODO) provides a few reusable mix-in class
+ - (TODO) a few reusable mix-in class
+
+*work in progress*
 
 
 ## Installing
@@ -40,10 +41,10 @@ class BarkerMixin:
         print("barking loudly")
 ```
 
-Thanks to the `field` goodie provided in this library, we can easily create mix-in classes that include fields definitions without defining a constructor:
+Thanks to `pyfields`, we can easily create mix-in classes that include fields definitions without defining a constructor:
 
 ```python
-from mixture import field
+from pyfields import field
 
 class TweeterMixin:
     afraid = field(default=False, 
@@ -55,10 +56,7 @@ class TweeterMixin:
         print("tweeting %s" % how)
 ```
 
-See [`field` documentation](./fields.md) for details.
-
-!!! success "No performance overhead"
-    For those of the readers who have recognized it: `field` returns a ["non-data" python descriptor](https://docs.python.org/3.7/howto/descriptor.html). So the first time the attribute is read, a small python method call extra cost is paid. *But* afterwards the attribute is replaced with a native attribute inside the object `__dict__`, so subsequent calls use native access without overhead. This was inspired by [werkzeug's @cached_property](https://tedboy.github.io/flask/generated/generated/werkzeug.cached_property.html).
+See [`pyfields` documentation](https://smarie.github.io/python-pyfields) for details.
 
 !!! info "Alternatives for class-level field definition"
     You can obviously use more advanced libraries such as [`attrs`](http://www.attrs.org) or [`dataclasses`](https://docs.python.org/3/library/dataclasses.html) but be aware that by default they create an `__init__` method for you. The intent here is to provide a "minimal viable product" to define class-level fields without creating `__init__` methods.
@@ -111,8 +109,8 @@ and if the mixin is an [Abstract Base Class](https://docs.python.org/3/library/a
 
 ## Main features / benefits
 
- * create mix-in classes without `__init__`, thanks to `field` 
  * optionally apply mix-ins without inheritance thanks to `@apply_mixins`
+ * add features quickly to your classes thanks to the provided library of mixins
 
 ## See Also
 
@@ -120,7 +118,6 @@ and if the mixin is an [Abstract Base Class](https://docs.python.org/3/library/a
 This library was inspired by:
 
  * [`pymixin`](https://github.com/yupeng0921/pymixin)
- * [`werkzeug.cached_property`](https://werkzeug.palletsprojects.com/en/0.15.x/utils/#werkzeug.utils.cached_property)
  * [`attrs`](http://www.attrs.org/)
  * [`dataclasses`](https://docs.python.org/3/library/dataclasses.html)
  * [`autoclass`](https://smarie.github.io/python-autoclass/)
