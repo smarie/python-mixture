@@ -3,8 +3,9 @@
 #  Copyright (c) Schneider Electric Industries, 2019. All right reserved.
 
 import pytest
+from pyfields import field
 
-from mixture import apply_mixins, field
+from mixture import apply_mixins
 
 from ..utils import ABC
 
