@@ -2,8 +2,6 @@
 #
 #  Copyright (c) Schneider Electric Industries, 2019. All right reserved.
 
-#  Authors: Sylvain Marie <sylvain.marie@se.com>
-#
 import pytest
 
 from mixture import apply_mixins, field

@@ -1,7 +1,7 @@
 #  Authors: Sylvain Marie <sylvain.marie@se.com>
 #
 #  Copyright (c) Schneider Electric Industries, 2019. All right reserved.
-import sys
+
 from warnings import warn
 
 try:  # python 3.5+
@@ -33,7 +33,6 @@ def apply_mixins(*mixin_classes):
     Classes are
 
     :param mixin_classes:
-    :param cls: the decorated class
     :return:
     """
     def _effectively_decorate(orig_cls):
@@ -90,9 +89,10 @@ def apply_mixins(*mixin_classes):
                 mixin_class.register(out_cls)
             except AttributeError:
                 # warn(
-                #     "Mixin class '%s' does not seem to be an ABC so it can not be registered as the virtual parent of "
-                #     "class '%s'. As a result issubclass and isinstance will result `False`. You probably wish your "
-                #     "mixin class to inherit from `ABC` or use meta `ABCMeta` to fix this", MixinNotRegisterableWarning)
+                #     "Mixin class '%s' does not seem to be an ABC so it can not be registered as the virtual parent of"
+                #     " class '%s'. As a result issubclass and isinstance will result `False`. You probably wish your "
+                #     "mixin class to inherit from `ABC` or use meta `ABCMeta` to fix this",
+                #     MixinNotRegisterableWarning)
                 # ignore silently
                 pass
 
@@ -113,7 +113,6 @@ def list_all_members_to_copy(source_cls, dest_cls):
 
     :param source_cls:
     :param dest_cls:
-    :param force_copy: the names that should be copied in all cases
     :return:
     """
     members_to_copy = dict()
