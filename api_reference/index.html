@@ -32,7 +32,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.2">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
     
     
       
@@ -224,18 +224,6 @@
       
       
 
-
-  <li class="md-nav__item">
-    <a href="../fields/" title="Fields documentation" class="md-nav__link">
-      Fields documentation
-    </a>
-  </li>
-
-    
-      
-      
-      
-
   
 
 
@@ -268,19 +256,6 @@
   <a href="#1-mixin-basics" class="md-nav__link">
     1. Mixin basics
   </a>
-  
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#field" class="md-nav__link">
-    field
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -332,19 +307,6 @@
     1. Mixin basics
   </a>
   
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#field" class="md-nav__link">
-    field
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
       
@@ -369,77 +331,6 @@
                 <h1 id="api-reference">API reference<a class="headerlink" href="#api-reference" title="Permanent link">&para;</a></h1>
 <p>In general, <code>help(symbol)</code> will provide the latest up-to-date documentation.</p>
 <h2 id="1-mixin-basics">1. Mixin basics<a class="headerlink" href="#1-mixin-basics" title="Permanent link">&para;</a></h2>
-<h3 id="field"><em><code>field</code></em><a class="headerlink" href="#field" title="Permanent link">&para;</a></h3>
-<p><code>field(default=MISSING, default_factory=MISSING, doc=None, name=None)</code></p>
-<p>Returns a class-level attribute definition. It allows developers to define an attribute without writing an 
-<code>__init__</code> method. Typically useful for mixin classes.</p>
-<p><strong>Lazyness</strong></p>
-<p>The field will be lazily-defined, so if you create an instance of the class, the field will not have any value 
-until it is first read or written.</p>
-<p><strong>Optional/Mandatory</strong></p>
-<p>By default fields are mandatory, which means that you must set them before reading them (otherwise a
-<code>MandatoryFieldInitError</code> will be raised). You can define an optional field by providing a <code>default</code> value. 
-This value will not be copied but used "as is" on all instances, following python's classical pattern for default 
-values. If you wish to run specific code to instantiate the default value, you may provide a <code>default_factory</code>
-callable instead. That callable should have no mandatory argument and should return the default value. </p>
-<p><strong>Typing</strong></p>
-<p>Type hints for fields can be provided using the standard python typing mechanisms (type comments for python &lt; 3.6  and class member type hints for python &gt;= 3.6). Types declared this way will not be checked at runtime, they are just hints for the IDE.</p>
-<p>Instead, you can specify a <code>type</code> to declare that type should be checked. In that case the type will be validated everytime a new value is provided, and a <code>TypeError</code> will be raised if invalid. The corresponding type hint is automatically declared by <code>field</code> so your IDE will know about it, no need to use additional type hints.</p>
-<p><strong>Documentation</strong></p>
-<p>A docstring can be provided for code readability.</p>
-<p><strong>Example</strong></p>
-<div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">mixture</span> <span class="kn">import</span> <span class="n">field</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="k">class</span> <span class="nc">Foo</span><span class="p">:</span>
-<span class="o">...</span>     <span class="n">foo</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;bar&#39;</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;This is an optional field with a default value&quot;</span><span class="p">)</span>
-<span class="o">...</span>     <span class="n">foo2</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;This is an optional with a default value factory&quot;</span><span class="p">)</span>
-<span class="o">...</span>     <span class="n">foo3</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">doc</span><span class="o">=</span><span class="s2">&quot;This is a mandatory field&quot;</span><span class="p">)</span>
-<span class="o">...</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">o</span> <span class="o">=</span> <span class="n">Foo</span><span class="p">()</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">o</span><span class="o">.</span><span class="n">foo</span>   <span class="c1"># read access with default value</span>
-<span class="s1">&#39;bar&#39;</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">o</span><span class="o">.</span><span class="n">foo2</span>  <span class="c1"># read access with default value factory</span>
-<span class="p">[]</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">o</span><span class="o">.</span><span class="n">foo2</span> <span class="o">=</span> <span class="mi">12</span>  <span class="c1"># write access</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">o</span><span class="o">.</span><span class="n">foo2</span>
-<span class="mi">12</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">o</span><span class="o">.</span><span class="n">foo3</span>  <span class="c1"># read access for mandatory attr without init</span>
-<span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-    <span class="o">...</span>
-<span class="n">mixture</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">MandatoryFieldInitError</span><span class="p">:</span> <span class="n">Mandatory</span> <span class="n">field</span> <span class="s1">&#39;foo3&#39;</span> <span class="n">was</span> <span class="ow">not</span> <span class="nb">set</span> <span class="n">before</span> <span class="n">first</span> <span class="n">access</span> <span class="n">on</span> <span class="nb">object</span><span class="o">...</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">o</span><span class="o">.</span><span class="n">foo3</span> <span class="o">=</span> <span class="bp">True</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">o</span><span class="o">.</span><span class="n">foo3</span>  <span class="c1"># read access for mandatory attr after init</span>
-<span class="bp">True</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="k">del</span> <span class="n">o</span><span class="o">.</span><span class="n">foo3</span>  <span class="c1"># all attributes can be deleted, same behaviour than new object</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">o</span><span class="o">.</span><span class="n">foo3</span>
-<span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-    <span class="o">...</span>
-<span class="n">mixture</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">MandatoryFieldInitError</span><span class="p">:</span> <span class="n">Mandatory</span> <span class="n">field</span> <span class="s1">&#39;foo3&#39;</span> <span class="n">was</span> <span class="ow">not</span> <span class="nb">set</span> <span class="n">before</span> <span class="n">first</span> <span class="n">access</span> <span class="n">on</span> <span class="nb">object</span><span class="o">...</span>
-</pre></div>
-
-
-<p><strong>Limitations</strong></p>
-<p>Old-style classes are not supported: in python 2, don't forget to inherit from <code>object</code>.</p>
-<p><strong>Performance overhead</strong></p>
-<p><code>field</code> has two different ways to create your fields. One named <code>NativeField</code> is faster but does not permit type checking, validation, or converters; besides it does not work with classes using <code>__slots__</code>. It is used by default everytime where it is possible, except if you use one of the abovementioned features. In that case a <code>DescriptorField</code> will transparently be created. You can force a <code>DescriptorField</code> to be created by setting <code>use_descriptor=True</code>.</p>
-<p>The <code>NativeField</code> class implements the "non-data" descriptor protocol. So the first time the attribute is read, a small  python method call extra cost is paid. <em>But</em> afterwards the attribute is replaced with a native attribute inside the object <code>__dict__</code>, so subsequent calls use native access without overhead. 
-This was inspired by <a href="https://tedboy.github.io/flask/generated/generated/werkzeug.cached_property.html">werkzeug's @cached_property</a>. </p>
-<p><strong>Inspired by</strong></p>
-<p>This method was inspired by </p>
-<ul>
-<li>@lazy_attribute (sagemath)</li>
-<li>@cached_property (werkzeug) and https://stackoverflow.com/questions/24704147/python-what-is-a-lazy-property</li>
-<li>https://stackoverflow.com/questions/42023852/how-can-i-get-the-attribute-name-when-working-with-descriptor-protocol-in-python</li>
-<li>attrs / dataclasses</li>
-</ul>
-<p><strong>Parameters</strong></p>
-<ul>
-<li><code>type</code>: an optional type for the field. If one is provided, the field will not be a simple (fast) field any more but will be a descriptor (slower) field.</li>
-<li><code>default</code>: a default value for the field. Providing a <code>default</code> makes the field "optional". <code>default</code> value is not copied on new instances, if you wish a new copy to be created you should provide a <code>default_factory</code> instead. Only one of <code>default</code> or <code>default_factory</code> should be provided.</li>
-<li><code>default_factory</code>: a factory that will be called (without arguments) to get the default value for that field, everytime one is needed. Providing a <code>default_factory</code> makes the field "optional". Only one of <code>default</code> or <code>default_factory</code> should be provided.</li>
-<li><code>doc</code>: documentation for the field. This is mostly for class readability purposes for now.</li>
-<li><code>name</code>: in python &lt; 3.6 this is mandatory, and should be the same name than the one used used in the class definition (typically, <code>class Foo:    &lt;name&gt; = field(name=&lt;name&gt;)</code>).</li>
-<li><code>use_descriptor</code>: a boolean (default: <code>False</code>) that can be turned to <code>True</code> to force a field to be a descriptor field. This is mandatory for classes that do not have <code>__dict__</code> (so, classes with <code>__slots__</code>)</li>
-</ul>
                 
                   
                 
@@ -460,7 +351,7 @@ This was inspired by <a href="https://tedboy.github.io/flask/generated/generated
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../fields/" title="Fields documentation" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href=".." title="Home" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -469,7 +360,7 @@ This was inspired by <a href="https://tedboy.github.io/flask/generated/generated
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Fields documentation
+                Home
               </span>
             </div>
           </a>
@@ -509,7 +400,7 @@ This was inspired by <a href="https://tedboy.github.io/flask/generated/generated
       
     </div>
     
-      <script src="../assets/javascripts/application.c648116f.js"></script>
+      <script src="../assets/javascripts/application.ac79c3b0.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:".."}})</script>
       

@@ -32,7 +32,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.2">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
     
     
       
@@ -345,18 +345,6 @@
 
 
   <li class="md-nav__item">
-    <a href="fields/" title="Fields documentation" class="md-nav__link">
-      Fields documentation
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
     <a href="api_reference/" title="API reference" class="md-nav__link">
       API reference
     </a>
@@ -508,10 +496,10 @@
 <p><a href="https://smarie.github.io/python-mixture/"><img alt="Documentation" src="https://img.shields.io/badge/doc-latest-blue.svg" /></a> <a href="https://pypi.python.org/pypi/mixture/"><img alt="PyPI" src="https://img.shields.io/pypi/v/mixture.svg" /></a> <a href="https://pepy.tech/project/mixture"><img alt="Downloads" src="https://pepy.tech/badge/mixture" /></a> <a href="https://pepy.tech/project/mixture"><img alt="Downloads per week" src="https://pepy.tech/badge/mixture/week" /></a> <a href="https://github.com/smarie/python-mixture/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/smarie/python-mixture.svg" /></a></p>
 <p>Creating <a href="https://en.wikipedia.org/wiki/Mixin">mixin classes</a> is a quite elegant way to design reusable object-oriented code in python. Doing it right might be tricky as python provides many alternate ways. This library provides</p>
 <ul>
-<li>a minimal <code>field</code> implementation enabling developers to create mixin classes without having to define <code>__init__</code> methods (thus avoiding the multiparent initialization hell) </li>
 <li>an <code>@apply_mixins</code> decorator for those users wishing to avoid inheritance <em>at all</em> when mixing classes</li>
-<li>(TODO) provides a few reusable mix-in class</li>
+<li>(TODO) a few reusable mix-in class</li>
 </ul>
+<p><em>work in progress</em></p>
 <h2 id="installing">Installing<a class="headerlink" href="#installing" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span>&gt; pip install mixture
 </pre></div>
@@ -534,8 +522,8 @@
 </pre></div>
 
 
-<p>Thanks to the <code>field</code> goodie provided in this library, we can easily create mix-in classes that include fields definitions without defining a constructor:</p>
-<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">mixture</span> <span class="kn">import</span> <span class="n">field</span>
+<p>Thanks to <code>pyfields</code>, we can easily create mix-in classes that include fields definitions without defining a constructor:</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pyfields</span> <span class="kn">import</span> <span class="n">field</span>
 
 <span class="k">class</span> <span class="nc">TweeterMixin</span><span class="p">:</span>
     <span class="n">afraid</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
@@ -548,11 +536,7 @@
 </pre></div>
 
 
-<p>See <a href="fields/"><code>field</code> documentation</a> for details.</p>
-<div class="admonition success">
-<p class="admonition-title">No performance overhead</p>
-<p>For those of the readers who have recognized it: <code>field</code> returns a <a href="https://docs.python.org/3.7/howto/descriptor.html">"non-data" python descriptor</a>. So the first time the attribute is read, a small python method call extra cost is paid. <em>But</em> afterwards the attribute is replaced with a native attribute inside the object <code>__dict__</code>, so subsequent calls use native access without overhead. This was inspired by <a href="https://tedboy.github.io/flask/generated/generated/werkzeug.cached_property.html">werkzeug's @cached_property</a>.</p>
-</div>
+<p>See <a href="https://smarie.github.io/python-pyfields"><code>pyfields</code> documentation</a> for details.</p>
 <div class="admonition info">
 <p class="admonition-title">Alternatives for class-level field definition</p>
 <p>You can obviously use more advanced libraries such as <a href="http://www.attrs.org"><code>attrs</code></a> or <a href="https://docs.python.org/3/library/dataclasses.html"><code>dataclasses</code></a> but be aware that by default they create an <code>__init__</code> method for you. The intent here is to provide a "minimal viable product" to define class-level fields without creating <code>__init__</code> methods.</p>
@@ -596,14 +580,13 @@
 <p><strong>TODO</strong></p>
 <h2 id="main-features-benefits">Main features / benefits<a class="headerlink" href="#main-features-benefits" title="Permanent link">&para;</a></h2>
 <ul>
-<li>create mix-in classes without <code>__init__</code>, thanks to <code>field</code> </li>
 <li>optionally apply mix-ins without inheritance thanks to <code>@apply_mixins</code></li>
+<li>add features quickly to your classes thanks to the provided library of mixins</li>
 </ul>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <p>This library was inspired by:</p>
 <ul>
 <li><a href="https://github.com/yupeng0921/pymixin"><code>pymixin</code></a></li>
-<li><a href="https://werkzeug.palletsprojects.com/en/0.15.x/utils/#werkzeug.utils.cached_property"><code>werkzeug.cached_property</code></a></li>
 <li><a href="http://www.attrs.org/"><code>attrs</code></a></li>
 <li><a href="https://docs.python.org/3/library/dataclasses.html"><code>dataclasses</code></a></li>
 <li><a href="https://smarie.github.io/python-autoclass/"><code>autoclass</code></a></li>
@@ -633,13 +616,13 @@
       <nav class="md-footer-nav__inner md-grid">
         
         
-          <a href="fields/" title="Fields documentation" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="api_reference/" title="API reference" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Fields documentation
+                API reference
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">
@@ -667,7 +650,7 @@
       
     </div>
     
-      <script src="assets/javascripts/application.c648116f.js"></script>
+      <script src="assets/javascripts/application.ac79c3b0.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:"."}})</script>
       
