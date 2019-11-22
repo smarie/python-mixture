@@ -26,7 +26,6 @@ install:
   - pip list
   - pip install six setuptools_scm  # apparently python 2 requires this
   - python ci_tools/py_install.py pip ci_tools/requirements-pip.txt
-  - if [ ! "${TRAVIS_PYTHON_VERSION}" = "2.7" ]; then pip install doit; fi;
   # travis-specific installs
   - pip install PyGithub  # for ci_tools/github_release.py
   - pip install codecov  # See https://github.com/codecov/example-python.
@@ -36,7 +35,6 @@ script:
 #  - coverage run tests.py
   - pip install .
   - python -c "import os; os.chdir('..'); import mixture"
-  - pip uninstall -y mixture  # so that the setuptools_scm test can be executed
 # ***tests***
 #  - coverage run tests.py
 #  - pytest --junitxml=reports/junit/junit.xml --html=reports/junit/report.html --cov-report term-missing --cov=./mixture -v mixture/tests/
